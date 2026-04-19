@@ -10,8 +10,11 @@ export function useRoomRealtime(roomId: string | null) {
   const {
     setRoom,
     upsertPlayer,
+    removePlayer,
     upsertAnswer,
+    removeAnswer,
     addVote,
+    removeVote,
     setConnected,
   } = useGameStore();
 
@@ -49,7 +52,7 @@ export function useRoomRealtime(roomId: string | null) {
           upsertPlayer(payload.new as Player);
         }
       )
-      // Player updates (score, is_ready, is_connected, is_kicked)
+      // Player updates (score, is_ready, is_connected)
       .on(
         "postgres_changes",
         {
@@ -60,6 +63,22 @@ export function useRoomRealtime(roomId: string | null) {
         },
         (payload) => {
           upsertPlayer(payload.new as Player);
+        }
+      )
+      // Player deletes (fired during final→lobby cleanup for disconnected
+      // players). Requires REPLICA IDENTITY FULL on players (migration 011)
+      // so the room_id filter can match.
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "players",
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          const old = payload.old as { id?: string } | undefined;
+          if (old?.id) removePlayer(old.id);
         }
       )
       // Answer inserts
@@ -88,6 +107,20 @@ export function useRoomRealtime(roomId: string | null) {
           upsertAnswer(payload.new as Answer);
         }
       )
+      // Answer deletes (fired during final→lobby cleanup)
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "answers",
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          const old = payload.old as { id?: string } | undefined;
+          if (old?.id) removeAnswer(old.id);
+        }
+      )
       // Vote inserts
       .on(
         "postgres_changes",
@@ -101,6 +134,21 @@ export function useRoomRealtime(roomId: string | null) {
           addVote(payload.new as Vote);
         }
       )
+      // Vote deletes (fired during final→lobby cleanup, and transiently when
+      // a voter swaps their pick — see submit-vote route).
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "votes",
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          const old = payload.old as { id?: string } | undefined;
+          if (old?.id) removeVote(old.id);
+        }
+      )
       .subscribe((status) => {
         setConnected(status === "SUBSCRIBED");
       });
@@ -109,5 +157,15 @@ export function useRoomRealtime(roomId: string | null) {
       supabase.removeChannel(channel);
       setConnected(false);
     };
-  }, [roomId, setRoom, upsertPlayer, upsertAnswer, addVote, setConnected]);
+  }, [
+    roomId,
+    setRoom,
+    upsertPlayer,
+    removePlayer,
+    upsertAnswer,
+    removeAnswer,
+    addVote,
+    removeVote,
+    setConnected,
+  ]);
 }

@@ -53,11 +53,7 @@ export default function RoomLayout({
       // Load all players, answers, votes for the room
       const [{ data: players }, { data: answers }, { data: votes }] =
         await Promise.all([
-          supabase
-            .from("players")
-            .select()
-            .eq("room_id", r.id)
-            .eq("is_kicked", false),
+          supabase.from("players").select().eq("room_id", r.id),
           supabase
             .from("answers")
             .select()

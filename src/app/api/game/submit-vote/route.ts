@@ -44,21 +44,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Cannot vote for your own answer" }, { status: 400 });
   }
 
-  // Insert vote (upsert: replace previous vote if changed)
-  // First delete existing vote from this voter this round
-  await supabase
-    .from("votes")
-    .delete()
-    .eq("room_id", roomId)
-    .eq("round", round)
-    .eq("voter_player_id", voterId);
-
-  const { error: voteError } = await supabase.from("votes").insert({
-    room_id: roomId,
-    round,
-    voter_player_id: voterId,
-    answer_id: answerId,
-  });
+  // Atomic upsert on the unique (room_id, round, voter_player_id) constraint.
+  // Previous DELETE+INSERT raced with the vote_count triggers (the row was
+  // briefly missing and counts off-by-one). Migration 009 adds an UPDATE
+  // trigger that moves the count from OLD.answer_id → NEW.answer_id when a
+  // voter swaps picks, so the count stays correct on this single round-trip.
+  const { error: voteError } = await supabase.from("votes").upsert(
+    {
+      room_id: roomId,
+      round,
+      voter_player_id: voterId,
+      answer_id: answerId,
+    },
+    { onConflict: "room_id,round,voter_player_id" }
+  );
 
   if (voteError) {
     return NextResponse.json({ error: voteError.message }, { status: 500 });

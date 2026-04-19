@@ -40,8 +40,7 @@ export async function POST(req: NextRequest) {
         .from("players")
         .select("*", { count: "exact", head: true })
         .eq("room_id", candidate.id)
-        .eq("is_connected", true)
-        .eq("is_kicked", false);
+        .eq("is_connected", true);
 
       if ((count ?? 0) < MAX_PLAYERS) {
         targetRoom = candidate;
@@ -96,8 +95,7 @@ export async function POST(req: NextRequest) {
     const { data: existingPlayers } = await supabase
       .from("players")
       .select("avatar_index")
-      .eq("room_id", room.id)
-      .eq("is_kicked", false);
+      .eq("room_id", room.id);
 
     if ((existingPlayers?.length ?? 0) >= MAX_PLAYERS) {
       return NextResponse.json({ error: "Room is full" }, { status: 409 });

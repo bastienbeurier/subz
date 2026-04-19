@@ -48,8 +48,7 @@ export async function POST(req: NextRequest) {
     .from("players")
     .select("is_ready")
     .eq("room_id", roomId)
-    .eq("is_connected", true)
-    .eq("is_kicked", false);
+    .eq("is_connected", true);
 
   const total = connected?.length ?? 0;
   const readyCount = (connected ?? []).filter((p) => p.is_ready).length;

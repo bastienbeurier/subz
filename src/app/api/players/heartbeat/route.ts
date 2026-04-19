@@ -37,7 +37,6 @@ export async function POST(req: NextRequest) {
     .from("players")
     .select("*", { count: "exact", head: true })
     .eq("room_id", roomId)
-    .eq("is_kicked", false)
     .gte("last_seen_at", staleThreshold);
 
   if (count === 0) {

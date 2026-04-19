@@ -39,8 +39,7 @@ export async function POST(req: NextRequest) {
     .from("players")
     .select("*", { count: "exact", head: true })
     .eq("room_id", room.id)
-    .eq("is_connected", true)
-    .eq("is_kicked", false);
+    .eq("is_connected", true);
 
   if ((count ?? 0) >= MAX_PLAYERS) {
     return NextResponse.json({ error: "Room is full" }, { status: 409 });
@@ -50,14 +49,13 @@ export async function POST(req: NextRequest) {
   const joinedRound = room.current_round ?? 0;
 
   // Assign avatar (pick unused slot). A unique index on
-  // (room_id, avatar_index) WHERE is_kicked=false catches concurrent joiners
-  // racing for the same slot — retry with the next unused index on conflict.
+  // (room_id, avatar_index) catches concurrent joiners racing for the same
+  // slot — retry with the next unused index on conflict.
   for (let attempt = 0; attempt < MAX_PLAYERS; attempt++) {
     const { data: existingPlayers } = await supabase
       .from("players")
       .select("avatar_index")
-      .eq("room_id", room.id)
-      .eq("is_kicked", false);
+      .eq("room_id", room.id);
 
     if ((existingPlayers?.length ?? 0) >= MAX_PLAYERS) {
       return NextResponse.json({ error: "Room is full" }, { status: 409 });

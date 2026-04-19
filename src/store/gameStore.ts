@@ -28,8 +28,10 @@ interface GameActions {
   setPlayers: (players: Player[]) => void;
   addAnswer: (answer: Answer) => void;
   upsertAnswer: (answer: Answer) => void;
+  removeAnswer: (answerId: string) => void;
   setAnswers: (answers: Answer[]) => void;
   addVote: (vote: Vote) => void;
+  removeVote: (voteId: string) => void;
   setVotes: (votes: Vote[]) => void;
   setMyPlayer: (id: string, pseudo: string) => void;
   setSubmitted: (submitted: boolean) => void;
@@ -108,6 +110,16 @@ export const useGameStore = create<GameState & GameActions>()(
         }
       }),
 
+    removeAnswer: (answerId) =>
+      set((state) => {
+        state.answers = state.answers.filter((a) => a.id !== answerId);
+      }),
+
+    removeVote: (voteId) =>
+      set((state) => {
+        state.votes = state.votes.filter((v) => v.id !== voteId);
+      }),
+
     setVotes: (votes) =>
       set((state) => {
         state.votes = votes;
@@ -143,7 +155,7 @@ export const selectMyPlayer = (state: GameState & GameActions) =>
   state.players.find((p) => p.id === state.myPlayerId) ?? null;
 
 export const selectConnectedPlayers = (state: GameState & GameActions) =>
-  state.players.filter((p) => p.is_connected && !p.is_kicked);
+  state.players.filter((p) => p.is_connected);
 
 // Players eligible to submit answers / cast votes this round. Mid-round joiners
 // (joined_round === current_round) are excluded — they can only participate
@@ -151,7 +163,7 @@ export const selectConnectedPlayers = (state: GameState & GameActions) =>
 export const selectActivePlayersThisRound = (state: GameState & GameActions) => {
   const round = state.room?.current_round ?? 0;
   return state.players.filter(
-    (p) => p.is_connected && !p.is_kicked && p.joined_round < round
+    (p) => p.is_connected && p.joined_round < round
   );
 };
 
@@ -164,6 +176,4 @@ export const selectCurrentVotes = (state: GameState & GameActions) =>
   state.votes.filter((v) => v.round === (state.room?.current_round ?? 0));
 
 export const selectSortedPlayers = (state: GameState & GameActions) =>
-  [...state.players]
-    .filter((p) => !p.is_kicked)
-    .sort((a, b) => b.score - a.score);
+  [...state.players].sort((a, b) => b.score - a.score);

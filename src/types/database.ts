@@ -1,6 +1,8 @@
 // Hand-written until `supabase gen types typescript` can be run against a live project.
 // Keep in sync with supabase/migrations/*.sql
 
+import type { GamePhase } from "./game";
+
 export type Database = {
   public: {
     Tables: {
@@ -45,7 +47,7 @@ export type Database = {
           id: string;
           created_at: string;
           code: string;
-          phase: string;
+          phase: GamePhase;
           current_round: number;
           current_video_id: string | null;
           used_video_ids: string[];
@@ -60,7 +62,7 @@ export type Database = {
           id?: string;
           created_at?: string;
           code: string;
-          phase?: string;
+          phase?: GamePhase;
           current_round?: number;
           current_video_id?: string | null;
           used_video_ids?: string[];
@@ -75,7 +77,7 @@ export type Database = {
           id?: string;
           created_at?: string;
           code?: string;
-          phase?: string;
+          phase?: GamePhase;
           current_round?: number;
           current_video_id?: string | null;
           used_video_ids?: string[];
@@ -99,7 +101,6 @@ export type Database = {
           score: number;
           is_ready: boolean;
           is_connected: boolean;
-          is_kicked: boolean;
           last_seen_at: string;
           joined_round: number;
         };
@@ -113,7 +114,6 @@ export type Database = {
           score?: number;
           is_ready?: boolean;
           is_connected?: boolean;
-          is_kicked?: boolean;
           last_seen_at?: string;
           joined_round?: number;
         };
@@ -127,7 +127,6 @@ export type Database = {
           score?: number;
           is_ready?: boolean;
           is_connected?: boolean;
-          is_kicked?: boolean;
           last_seen_at?: string;
           joined_round?: number;
         };
@@ -196,6 +195,8 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
-    Enums: Record<string, never>;
+    Enums: {
+      game_phase: GamePhase;
+    };
   };
 };

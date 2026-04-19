@@ -32,7 +32,6 @@ export interface Player {
   score: number;
   is_ready: boolean;
   is_connected: boolean;
-  is_kicked: boolean;
   last_seen_at: string;
   joined_round: number;
   created_at: string;

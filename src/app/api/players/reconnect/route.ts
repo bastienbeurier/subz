@@ -35,7 +35,6 @@ export async function POST(req: NextRequest) {
     .select()
     .eq("id", playerId)
     .eq("room_id", room.id)
-    .eq("is_kicked", false)
     .maybeSingle();
 
   if (!player) {
