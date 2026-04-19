@@ -6,6 +6,7 @@ import {
   selectCurrentAnswers,
   selectActivePlayersThisRound,
 } from "@/store/gameStore";
+import { useShallow } from "zustand/react/shallow";
 import { Card } from "@/components/ui/Card";
 import { Timer } from "@/components/ui/Timer";
 import { VOTING_DURATION_MS } from "@/types/game";
@@ -13,8 +14,8 @@ import { VOTING_DURATION_MS } from "@/types/game";
 export function VotingPhase() {
   const room = useGameStore((s) => s.room);
   const myPlayerId = useGameStore((s) => s.myPlayerId);
-  const answers = useGameStore(selectCurrentAnswers);
-  const players = useGameStore(selectActivePlayersThisRound);
+  const answers = useGameStore(useShallow(selectCurrentAnswers));
+  const players = useGameStore(useShallow(selectActivePlayersThisRound));
   const hasVoted = useGameStore((s) => s.hasVoted);
   const setVoted = useGameStore((s) => s.setVoted);
   const votes = useGameStore((s) => s.votes);

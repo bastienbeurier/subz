@@ -2,13 +2,14 @@
 
 import { Avatar } from "@/components/ui/Avatar";
 import { useGameStore, selectConnectedPlayers, selectMyPlayer } from "@/store/gameStore";
+import { useShallow } from "zustand/react/shallow";
 import { TOTAL_ROUNDS } from "@/types/game";
 import { cn } from "@/lib/utils/cn";
 import type { Player } from "@/types/game";
 
 export function ScoreBar() {
   const room = useGameStore((s) => s.room);
-  const players = useGameStore(selectConnectedPlayers);
+  const players = useGameStore(useShallow(selectConnectedPlayers));
   const myPlayer = useGameStore(selectMyPlayer);
   const answers = useGameStore((s) => s.answers);
   const votes = useGameStore((s) => s.votes);

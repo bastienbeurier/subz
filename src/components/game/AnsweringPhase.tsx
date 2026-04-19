@@ -5,6 +5,7 @@ import {
   useGameStore,
   selectActivePlayersThisRound,
 } from "@/store/gameStore";
+import { useShallow } from "zustand/react/shallow";
 import { Button } from "@/components/ui/Button";
 import { Timer } from "@/components/ui/Timer";
 import { Avatar } from "@/components/ui/Avatar";
@@ -13,7 +14,7 @@ import { ANSWERING_DURATION_MS } from "@/types/game";
 export function AnsweringPhase() {
   const room = useGameStore((s) => s.room);
   const myPlayerId = useGameStore((s) => s.myPlayerId);
-  const players = useGameStore(selectActivePlayersThisRound);
+  const players = useGameStore(useShallow(selectActivePlayersThisRound));
   const answers = useGameStore((s) => s.answers);
   const hasSubmitted = useGameStore((s) => s.hasSubmittedAnswer);
   const setSubmitted = useGameStore((s) => s.setSubmitted);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useGameStore, selectCurrentAnswers } from "@/store/gameStore";
+import { useShallow } from "zustand/react/shallow";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
 import type { Video } from "@/types/game";
 
@@ -10,7 +11,7 @@ interface DiffusionPhaseProps {
 
 export function DiffusionPhase({ video }: DiffusionPhaseProps) {
   const room = useGameStore((s) => s.room);
-  const answers = useGameStore(selectCurrentAnswers);
+  const answers = useGameStore(useShallow(selectCurrentAnswers));
 
   const currentAnswer = answers[room?.diffusion_index ?? 0];
 

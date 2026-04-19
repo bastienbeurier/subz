@@ -4,11 +4,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { useGameStore, selectConnectedPlayers, selectMyPlayer } from "@/store/gameStore";
+import { useShallow } from "zustand/react/shallow";
 import { cn } from "@/lib/utils/cn";
 
 export function LobbyPhase() {
   const room = useGameStore((s) => s.room);
-  const players = useGameStore(selectConnectedPlayers);
+  const players = useGameStore(useShallow(selectConnectedPlayers));
   const myPlayer = useGameStore(selectMyPlayer);
   const [copying, setCopying] = useState(false);
   const [readyLoading, setReadyLoading] = useState(false);

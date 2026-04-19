@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useGameStore, selectSortedPlayers } from "@/store/gameStore";
+import { useShallow } from "zustand/react/shallow";
 import { Avatar } from "@/components/ui/Avatar";
 import { Timer } from "@/components/ui/Timer";
 import { FINAL_DURATION_MS } from "@/types/game";
@@ -9,7 +10,7 @@ import confetti from "canvas-confetti";
 
 export function FinalPhase() {
   const room = useGameStore((s) => s.room);
-  const players = useGameStore(selectSortedPlayers);
+  const players = useGameStore(useShallow(selectSortedPlayers));
 
   const [first, second, third, ...rest] = players;
 

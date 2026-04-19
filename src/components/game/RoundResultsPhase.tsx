@@ -1,14 +1,15 @@
 "use client";
 
 import { useGameStore, selectCurrentAnswers, selectSortedPlayers } from "@/store/gameStore";
+import { useShallow } from "zustand/react/shallow";
 import { Avatar } from "@/components/ui/Avatar";
 import { Timer } from "@/components/ui/Timer";
 import { ROUND_RESULTS_DURATION_MS } from "@/types/game";
 
 export function RoundResultsPhase() {
   const room = useGameStore((s) => s.room);
-  const answers = useGameStore(selectCurrentAnswers);
-  const players = useGameStore(selectSortedPlayers);
+  const answers = useGameStore(useShallow(selectCurrentAnswers));
+  const players = useGameStore(useShallow(selectSortedPlayers));
   const votes = useGameStore((s) => s.votes);
 
   const currentVotes = votes.filter((v) => v.round === room?.current_round);
