@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 const schema = z.object({
   playerId: z.string().uuid(),
   roomId: z.string().uuid(),
+  ready: z.boolean().optional().default(true),
 });
 
 export async function POST(req: NextRequest) {
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const { playerId, roomId } = parsed.data;
+  const { playerId, roomId, ready } = parsed.data;
   const supabase = createServiceClient();
 
   // Verify room is in lobby phase
@@ -29,41 +30,41 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Room not in lobby" }, { status: 409 });
   }
 
-  // Mark this player ready
   await supabase
     .from("players")
-    .update({ is_ready: true })
+    .update({ is_ready: ready })
     .eq("id", playerId)
     .eq("room_id", roomId);
 
-  // Check if all connected, non-kicked players are now ready
-  const { data: notReady, count: notReadyCount } = await supabase
-    .from("players")
-    .select("id", { count: "exact" })
-    .eq("room_id", roomId)
-    .eq("is_connected", true)
-    .eq("is_kicked", false)
-    .eq("is_ready", false);
+  // Unready never triggers a start.
+  if (!ready) {
+    return NextResponse.json({ ok: true });
+  }
 
-  const { count: totalCount } = await supabase
+  // All connected players ready (≥ 2) → start game. Filtering by
+  // is_connected=true here also defends against the edge case where a player
+  // disconnected mid-check: we only count who's actually around.
+  const { data: connected } = await supabase
     .from("players")
-    .select("*", { count: "exact", head: true })
+    .select("is_ready")
     .eq("room_id", roomId)
     .eq("is_connected", true)
     .eq("is_kicked", false);
 
-  // All ready and at least 2 players — start game
-  if (notReadyCount === 0 && (totalCount ?? 0) >= 2) {
-    // Pick the first video
-    const { data: video } = await supabase
+  const total = connected?.length ?? 0;
+  const readyCount = (connected ?? []).filter((p) => p.is_ready).length;
+
+  if (total >= 2 && readyCount === total) {
+    // Pick a random first video
+    const { data: videos } = await supabase
       .from("videos")
       .select("id")
-      .eq("is_active", true)
-      .order("id") // deterministic first pick
-      .limit(1)
-      .maybeSingle();
+      .eq("is_active", true);
 
-    const videoId = video?.id ?? null;
+    const pick = videos && videos.length > 0
+      ? videos[Math.floor(Math.random() * videos.length)]
+      : null;
+    const videoId = pick?.id ?? null;
 
     await supabase
       .from("rooms")
@@ -76,8 +77,6 @@ export async function POST(req: NextRequest) {
       .eq("id", roomId)
       .eq("phase", "lobby"); // idempotency guard
   }
-
-  void notReady; // suppress unused variable warning
 
   return NextResponse.json({ ok: true });
 }

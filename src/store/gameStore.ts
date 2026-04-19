@@ -145,6 +145,16 @@ export const selectMyPlayer = (state: GameState & GameActions) =>
 export const selectConnectedPlayers = (state: GameState & GameActions) =>
   state.players.filter((p) => p.is_connected && !p.is_kicked);
 
+// Players eligible to submit answers / cast votes this round. Mid-round joiners
+// (joined_round === current_round) are excluded — they can only participate
+// starting next round, so they shouldn't block the "all answered/voted" checks.
+export const selectActivePlayersThisRound = (state: GameState & GameActions) => {
+  const round = state.room?.current_round ?? 0;
+  return state.players.filter(
+    (p) => p.is_connected && !p.is_kicked && p.joined_round < round
+  );
+};
+
 export const selectCurrentAnswers = (state: GameState & GameActions) =>
   state.answers
     .filter((a) => a.round === (state.room?.current_round ?? 0))

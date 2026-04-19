@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useGameStore, selectConnectedPlayers } from "@/store/gameStore";
+import { useEffect, useRef, useState } from "react";
+import {
+  useGameStore,
+  selectActivePlayersThisRound,
+} from "@/store/gameStore";
 import { Button } from "@/components/ui/Button";
 import { Timer } from "@/components/ui/Timer";
 import { Avatar } from "@/components/ui/Avatar";
@@ -10,7 +13,7 @@ import { ANSWERING_DURATION_MS } from "@/types/game";
 export function AnsweringPhase() {
   const room = useGameStore((s) => s.room);
   const myPlayerId = useGameStore((s) => s.myPlayerId);
-  const players = useGameStore(selectConnectedPlayers);
+  const players = useGameStore(selectActivePlayersThisRound);
   const answers = useGameStore((s) => s.answers);
   const hasSubmitted = useGameStore((s) => s.hasSubmittedAnswer);
   const setSubmitted = useGameStore((s) => s.setSubmitted);
@@ -18,12 +21,35 @@ export function AnsweringPhase() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const advanceFiredRef = useRef(false);
 
   const submittedPlayerIds = new Set(
     answers
       .filter((a) => a.round === room?.current_round)
       .map((a) => a.player_id)
   );
+
+  // When every active player has submitted, race to fire advance-phase.
+  // Server is idempotent (WHERE phase='answering') so multiple clients firing
+  // is safe; firedRef keeps a single client from firing repeatedly.
+  useEffect(() => {
+    if (!room || room.phase !== "answering") {
+      advanceFiredRef.current = false;
+      return;
+    }
+    if (players.length === 0) return;
+    const allSubmitted = players.every((p) => submittedPlayerIds.has(p.id));
+    if (allSubmitted && !advanceFiredRef.current) {
+      advanceFiredRef.current = true;
+      fetch("/api/game/advance-phase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId: room.id, expectedPhase: "answering" }),
+      }).catch(() => {
+        advanceFiredRef.current = false;
+      });
+    }
+  }, [room, players, submittedPlayerIds]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

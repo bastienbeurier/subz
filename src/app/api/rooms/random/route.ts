@@ -89,32 +89,47 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Room not found" }, { status: 500 });
   }
 
-  // Assign avatar
-  const { data: existingPlayers } = await supabase
-    .from("players")
-    .select("avatar_index")
-    .eq("room_id", room.id)
-    .eq("is_kicked", false);
+  // Assign avatar. Unique index on (room_id, avatar_index) catches concurrent
+  // joiners racing for the same slot — retry on conflict. If the room fills up
+  // between matching and inserting, fall through to "Room is full".
+  for (let attempt = 0; attempt < MAX_PLAYERS; attempt++) {
+    const { data: existingPlayers } = await supabase
+      .from("players")
+      .select("avatar_index")
+      .eq("room_id", room.id)
+      .eq("is_kicked", false);
 
-  const usedIndexes = new Set((existingPlayers ?? []).map((p) => p.avatar_index));
-  let avatarIndex = 0;
-  for (let i = 0; i < AVATAR_COLORS.length; i++) {
-    if (!usedIndexes.has(i)) {
-      avatarIndex = i;
-      break;
+    if ((existingPlayers?.length ?? 0) >= MAX_PLAYERS) {
+      return NextResponse.json({ error: "Room is full" }, { status: 409 });
+    }
+
+    const usedIndexes = new Set((existingPlayers ?? []).map((p) => p.avatar_index));
+    let avatarIndex = -1;
+    for (let i = 0; i < AVATAR_COLORS.length; i++) {
+      if (!usedIndexes.has(i)) {
+        avatarIndex = i;
+        break;
+      }
+    }
+    if (avatarIndex === -1) {
+      return NextResponse.json({ error: "Room is full" }, { status: 409 });
+    }
+    const color = AVATAR_COLORS[avatarIndex];
+
+    const { data: player, error: playerError } = await supabase
+      .from("players")
+      .insert({ room_id: room.id, pseudo, color, avatar_index: avatarIndex })
+      .select()
+      .single();
+
+    if (!playerError && player) {
+      return NextResponse.json({ room, player }, { status: 201 });
+    }
+
+    if (playerError?.code !== "23505") {
+      return NextResponse.json({ error: "Failed to join room" }, { status: 500 });
     }
   }
-  const color = AVATAR_COLORS[avatarIndex];
 
-  const { data: player, error: playerError } = await supabase
-    .from("players")
-    .insert({ room_id: room.id, pseudo, color, avatar_index: avatarIndex })
-    .select()
-    .single();
-
-  if (playerError || !player) {
-    return NextResponse.json({ error: "Failed to join room" }, { status: 500 });
-  }
-
-  return NextResponse.json({ room, player }, { status: 201 });
+  return NextResponse.json({ error: "Room is full" }, { status: 409 });
 }

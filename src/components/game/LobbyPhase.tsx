@@ -22,14 +22,18 @@ export function LobbyPhase() {
     setTimeout(() => setCopying(false), 2000);
   };
 
-  const handleReady = async () => {
+  const handleToggleReady = async () => {
     if (!myPlayer || !room) return;
     setReadyLoading(true);
     try {
       await fetch("/api/players/ready", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId: myPlayer.id, roomId: room.id }),
+        body: JSON.stringify({
+          playerId: myPlayer.id,
+          roomId: room.id,
+          ready: !isReady,
+        }),
       });
     } finally {
       setReadyLoading(false);
@@ -97,21 +101,16 @@ export function LobbyPhase() {
         </p>
       )}
 
-      {/* Ready button */}
-      {!isReady ? (
-        <Button
-          onClick={handleReady}
-          loading={readyLoading}
-          disabled={players.length < 2}
-          className="w-full max-w-sm"
-        >
-          I&apos;m ready!
-        </Button>
-      ) : (
-        <div className="w-full max-w-sm text-center py-4 rounded-2xl bg-green-500/10 border-2 border-green-500/30 text-green-400 font-bold">
-          You&apos;re ready! Waiting for others…
-        </div>
-      )}
+      {/* Ready toggle */}
+      <Button
+        variant={isReady ? "secondary" : "primary"}
+        onClick={handleToggleReady}
+        loading={readyLoading}
+        disabled={players.length < 2}
+        className="w-full max-w-sm"
+      >
+        {isReady ? "Not ready" : "I'm ready!"}
+      </Button>
     </main>
   );
 }

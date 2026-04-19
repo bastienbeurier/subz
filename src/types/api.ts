@@ -50,13 +50,6 @@ export interface ReconnectResponse {
   player: Player;
 }
 
-// POST /api/players/kick
-export interface KickPlayerRequest {
-  kickerId: string;
-  targetId: string;
-  roomId: string;
-}
-
 // POST /api/game/advance-phase
 export interface AdvancePhaseRequest {
   roomId: string;

@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useGameStore, selectCurrentAnswers, selectConnectedPlayers } from "@/store/gameStore";
+import { useEffect, useRef, useState } from "react";
+import {
+  useGameStore,
+  selectCurrentAnswers,
+  selectActivePlayersThisRound,
+} from "@/store/gameStore";
 import { Card } from "@/components/ui/Card";
 import { Timer } from "@/components/ui/Timer";
 import { VOTING_DURATION_MS } from "@/types/game";
@@ -10,13 +14,14 @@ export function VotingPhase() {
   const room = useGameStore((s) => s.room);
   const myPlayerId = useGameStore((s) => s.myPlayerId);
   const answers = useGameStore(selectCurrentAnswers);
-  const players = useGameStore(selectConnectedPlayers);
+  const players = useGameStore(selectActivePlayersThisRound);
   const hasVoted = useGameStore((s) => s.hasVoted);
   const setVoted = useGameStore((s) => s.setVoted);
   const votes = useGameStore((s) => s.votes);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const advanceFiredRef = useRef(false);
 
   const myAnswer = answers.find((a) => a.player_id === myPlayerId);
   const votableAnswers = answers.filter((a) => a.player_id !== myPlayerId);
@@ -25,6 +30,28 @@ export function VotingPhase() {
       .filter((v) => v.round === room?.current_round)
       .map((v) => v.voter_player_id)
   );
+
+  // When every active player has voted, race to fire advance-phase. The server
+  // tallies scores and transitions idempotently; advance-phase is the sole
+  // canonical scorer so multiple clients firing concurrently is safe.
+  useEffect(() => {
+    if (!room || room.phase !== "voting") {
+      advanceFiredRef.current = false;
+      return;
+    }
+    if (players.length === 0) return;
+    const allVoted = players.every((p) => votedPlayerIds.has(p.id));
+    if (allVoted && !advanceFiredRef.current) {
+      advanceFiredRef.current = true;
+      fetch("/api/game/advance-phase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId: room.id, expectedPhase: "voting" }),
+      }).catch(() => {
+        advanceFiredRef.current = false;
+      });
+    }
+  }, [room, players, votedPlayerIds]);
 
   const handleVote = async (answerId: string) => {
     if (!room || !myPlayerId || hasVoted || loading) return;

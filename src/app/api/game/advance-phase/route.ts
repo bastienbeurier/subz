@@ -4,11 +4,12 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { calculateRoundScores } from "@/lib/game/scoring";
 import {
   TOTAL_ROUNDS,
+  ANSWERING_DURATION_MS,
   VOTING_DURATION_MS,
   ROUND_RESULTS_DURATION_MS,
   FINAL_DURATION_MS,
 } from "@/types/game";
-import type { Answer, Player } from "@/types/game";
+import type { Answer } from "@/types/game";
 
 const schema = z.object({
   roomId: z.string().uuid(),
@@ -46,10 +47,11 @@ export async function POST(req: NextRequest) {
 
   switch (expectedPhase) {
     case "prompt": {
-      // prompt → answering
+      // prompt → answering: set deadline so every client has the same clock
+      const answeringDeadline = new Date(now.getTime() + ANSWERING_DURATION_MS).toISOString();
       const { error } = await supabase
         .from("rooms")
-        .update({ phase: "answering" })
+        .update({ phase: "answering", answering_deadline: answeringDeadline })
         .eq("id", roomId)
         .eq("phase", "prompt");
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -57,24 +59,36 @@ export async function POST(req: NextRequest) {
     }
 
     case "answering": {
-      // answering → diffusion: randomize display_order on answers
+      // answering → diffusion: randomize display_order on answers.
+      // If no answers were submitted, skip diffusion+voting and go straight to
+      // round_results with no scoring (game would otherwise freeze with an
+      // empty answer list in DiffusionPhase).
       const { data: answers } = await supabase
         .from("answers")
         .select("id")
         .eq("room_id", roomId)
         .eq("round", room.current_round);
 
-      if (answers && answers.length > 0) {
-        const shuffled = [...answers].sort(() => Math.random() - 0.5);
-        await Promise.all(
-          shuffled.map((a, i) =>
-            supabase
-              .from("answers")
-              .update({ display_order: i })
-              .eq("id", a.id)
-          )
-        );
+      if (!answers || answers.length === 0) {
+        const autoAdvanceAt = new Date(now.getTime() + ROUND_RESULTS_DURATION_MS).toISOString();
+        const { error } = await supabase
+          .from("rooms")
+          .update({ phase: "round_results", auto_advance_at: autoAdvanceAt })
+          .eq("id", roomId)
+          .eq("phase", "answering");
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        break;
       }
+
+      const shuffled = [...answers].sort(() => Math.random() - 0.5);
+      await Promise.all(
+        shuffled.map((a, i) =>
+          supabase
+            .from("answers")
+            .update({ display_order: i })
+            .eq("id", a.id)
+        )
+      );
 
       const { error } = await supabase
         .from("rooms")
@@ -98,33 +112,31 @@ export async function POST(req: NextRequest) {
     }
 
     case "voting": {
-      // voting → round_results: tally scores
+      // voting → round_results: tally scores (sole canonical scorer).
       const { data: answers } = await supabase
         .from("answers")
         .select()
         .eq("room_id", roomId)
         .eq("round", room.current_round);
 
-      const { data: players } = await supabase
-        .from("players")
-        .select()
-        .eq("room_id", roomId)
-        .eq("is_connected", true)
-        .eq("is_kicked", false);
+      if (answers && answers.length > 0) {
+        const scores = calculateRoundScores(answers as Answer[]);
+        // Fetch authors' current scores so we can apply the delta atomically
+        // per row. (No SQL RPC here to keep the migration surface small.)
+        const playerIds = Array.from(scores.keys());
+        const { data: authors } = await supabase
+          .from("players")
+          .select("id, score")
+          .in("id", playerIds);
 
-      if (answers && players) {
-        const scores = calculateRoundScores(
-          answers as Answer[],
-          players as Player[]
-        );
         await Promise.all(
-          Array.from(scores.entries()).map(([playerId, pts]) => {
-            const player = (players as Player[]).find((p) => p.id === playerId);
-            if (!player) return Promise.resolve();
+          (authors ?? []).map((p) => {
+            const pts = scores.get(p.id) ?? 0;
+            if (pts === 0) return Promise.resolve();
             return supabase
               .from("players")
-              .update({ score: player.score + pts })
-              .eq("id", playerId);
+              .update({ score: p.score + pts })
+              .eq("id", p.id);
           })
         );
       }
@@ -152,33 +164,38 @@ export async function POST(req: NextRequest) {
           .eq("phase", "round_results");
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       } else {
-        // → next prompt: pick next video
+        // → next prompt: pick next video at random, never the video that just
+        // played (avoid repeat after pool reset).
         const nextRound = room.current_round + 1;
         const usedIds: string[] = room.used_video_ids ?? [];
+        const lastVideoId = room.current_video_id;
 
-        let { data: video } = await supabase
-          .from("videos")
-          .select("id")
-          .eq("is_active", true)
-          .not("id", "in", `(${usedIds.join(",")})`)
-          .order("id")
-          .limit(1)
-          .maybeSingle();
+        const pickRandom = async (excludeIds: string[]) => {
+          let q = supabase.from("videos").select("id").eq("is_active", true);
+          if (excludeIds.length > 0) {
+            q = q.not("id", "in", `(${excludeIds.join(",")})`);
+          }
+          const { data } = await q;
+          if (!data || data.length === 0) return null;
+          return data[Math.floor(Math.random() * data.length)];
+        };
 
-        // Fallback: reset pool and pick fresh
+        let video = await pickRandom(usedIds);
+        let resetPool = false;
+
+        // Pool exhausted — reset and repick, excluding the just-played video
         if (!video) {
-          const { data: anyVideo } = await supabase
-            .from("videos")
-            .select("id")
-            .eq("is_active", true)
-            .order("id")
-            .limit(1)
-            .maybeSingle();
-          video = anyVideo;
+          resetPool = true;
+          const fallbackExclude = lastVideoId ? [lastVideoId] : [];
+          video = await pickRandom(fallbackExclude);
+          // Library has only 1 video: allow repeat rather than freeze
+          if (!video) video = await pickRandom([]);
         }
 
         const newUsedIds = video
-          ? [...usedIds, video.id]
+          ? resetPool
+            ? [video.id]
+            : [...usedIds, video.id]
           : usedIds;
 
         const { error } = await supabase
@@ -202,11 +219,18 @@ export async function POST(req: NextRequest) {
 
     case "final": {
       // → lobby: full reset
+      // Drop players who didn't stick around for the auto-restart — otherwise
+      // they'd linger in the new lobby holding avatar slots + blocking join.
       await supabase
         .from("players")
-        .update({ score: 0, is_ready: false })
+        .delete()
         .eq("room_id", roomId)
-        .eq("is_kicked", false);
+        .eq("is_connected", false);
+
+      await supabase
+        .from("players")
+        .update({ score: 0, is_ready: false, joined_round: 0 })
+        .eq("room_id", roomId);
 
       // Delete answers and votes for this room
       await supabase.from("votes").delete().eq("room_id", roomId);
