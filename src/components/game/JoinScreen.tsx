@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { savePlayerSession } from "@/hooks/usePlayerSession";
-import { useGameStore } from "@/store/gameStore";
 
 const schema = z.object({
   pseudo: z
@@ -25,9 +23,8 @@ interface JoinScreenProps {
 }
 
 export default function JoinScreen({ roomCode }: JoinScreenProps) {
-  const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
-  const setMyPlayer = useGameStore((s) => s.setMyPlayer);
+  const [joined, setJoined] = useState(false);
 
   const {
     register,
@@ -52,9 +49,12 @@ export default function JoinScreen({ roomCode }: JoinScreenProps) {
     }
 
     savePlayerSession(data.player.id, data.player.pseudo, roomCode);
-    setMyPlayer(data.player.id, data.player.pseudo);
-    // Navigate to refresh the page with the new session
-    router.refresh();
+    setJoined(true);
+
+    // Hard-reload so usePlayerSession re-reads localStorage and the layout
+    // reconnect effect fires with the new session. router.refresh() is not
+    // enough — it refreshes server data but doesn't re-mount client components.
+    window.location.reload();
   };
 
   return (
@@ -88,7 +88,7 @@ export default function JoinScreen({ roomCode }: JoinScreenProps) {
           <p className="text-sm text-red-400 text-center">{serverError}</p>
         )}
 
-        <Button type="submit" loading={isSubmitting} className="w-full mt-2">
+        <Button type="submit" loading={isSubmitting || joined} className="w-full mt-2">
           Join game
         </Button>
       </form>
