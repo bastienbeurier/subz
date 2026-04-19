@@ -1,19 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useGameStore } from "@/store/gameStore";
 import { usePlayerSession } from "@/hooks/usePlayerSession";
+import { PhaseTransition } from "@/components/layout/PhaseTransition";
 import { LobbyPhase } from "@/components/game/LobbyPhase";
 import { PromptPhase } from "@/components/game/PromptPhase";
 import { AnsweringPhase } from "@/components/game/AnsweringPhase";
 import { DiffusionPhase } from "@/components/game/DiffusionPhase";
 import { VotingPhase } from "@/components/game/VotingPhase";
 import { RoundResultsPhase } from "@/components/game/RoundResultsPhase";
+import { FinalPhase } from "@/components/game/FinalPhase";
 import JoinScreen from "@/components/game/JoinScreen";
 import { createClient } from "@/lib/supabase/client";
 import type { Video } from "@/types/game";
-import { useState } from "react";
 
 export default function RoomPage() {
   const params = useParams();
@@ -48,56 +49,49 @@ export default function RoomPage() {
       });
   }, [room?.current_video_id]);
 
-  // No session → show inline join screen
+  // No session → show inline join screen (no PhaseTransition, standalone screen)
   if (!session || !myPlayerId) {
     return <JoinScreen roomCode={code} />;
   }
 
   // Room not yet loaded
   if (!room) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <Spinner />;
   }
 
-  switch (room.phase) {
-    case "lobby":
-      return <LobbyPhase />;
+  // Key for AnimatePresence — use round+phase so transitions fire on every round
+  const transitionKey = `${room.current_round}-${room.phase}`;
 
-    case "prompt":
-      if (!video) return <Spinner />;
-      return <PromptPhase video={video} />;
+  const renderPhase = () => {
+    switch (room.phase) {
+      case "lobby":
+        return <LobbyPhase />;
+      case "prompt":
+        return video ? <PromptPhase video={video} /> : <Spinner />;
+      case "answering":
+        return <AnsweringPhase />;
+      case "diffusion":
+        return video ? <DiffusionPhase video={video} /> : <Spinner />;
+      case "voting":
+        return <VotingPhase />;
+      case "round_results":
+        return <RoundResultsPhase />;
+      case "final":
+        return <FinalPhase />;
+      default:
+        return (
+          <div className="flex-1 flex items-center justify-center text-white/40">
+            Unknown phase: {room.phase}
+          </div>
+        );
+    }
+  };
 
-    case "answering":
-      return <AnsweringPhase />;
-
-    case "diffusion":
-      if (!video) return <Spinner />;
-      return <DiffusionPhase video={video} />;
-
-    case "voting":
-      return <VotingPhase />;
-
-    case "round_results":
-      return <RoundResultsPhase />;
-
-    case "final":
-      // FinalPhase will be added in Phase 4
-      return (
-        <div className="flex-1 flex items-center justify-center text-white/40">
-          Game over — final phase coming soon
-        </div>
-      );
-
-    default:
-      return (
-        <div className="flex-1 flex items-center justify-center text-white/40">
-          Unknown phase: {room.phase}
-        </div>
-      );
-  }
+  return (
+    <PhaseTransition phaseKey={transitionKey}>
+      {renderPhase()}
+    </PhaseTransition>
+  );
 }
 
 function Spinner() {

@@ -21,6 +21,7 @@
 html,
 body {
   height: 100%;
+  /* Prevent overscroll bounce on iOS */
   overscroll-behavior: none;
 }
 
@@ -28,13 +29,31 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: system-ui, -apple-system, sans-serif;
+  /* Disable tap highlight on mobile */
   -webkit-tap-highlight-color: transparent;
+  /* Bottom safe area for home indicator */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Ensure minimum touch target sizes */
+/* Minimum touch target sizes throughout */
 button,
 [role="button"],
 input[type="submit"] {
   min-height: 44px;
   min-width: 44px;
+}
+
+/* Hide scrollbar but keep scrolling */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent text selection during long-press */
+.select-none {
+  -webkit-user-select: none;
+  user-select: none;
 }

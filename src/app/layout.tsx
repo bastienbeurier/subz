@@ -12,6 +12,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: "#0f0f13",
+  viewportFit: "cover", // respect notch/home indicator safe areas
 };
 
 export default function RootLayout({
