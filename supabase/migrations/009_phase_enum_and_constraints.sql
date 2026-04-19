@@ -12,6 +12,11 @@ create type game_phase as enum (
   'final'
 );
 
+-- Drop the partial index first — its predicate uses phase as text, so Postgres
+-- cannot rewrite it during the column type conversion and raises
+-- "operator does not exist: game_phase = text".
+drop index if exists rooms_lobby_idx;
+
 alter table rooms drop constraint rooms_phase_check;
 
 alter table rooms
@@ -19,9 +24,7 @@ alter table rooms
   alter column phase type game_phase using phase::game_phase,
   alter column phase set default 'lobby'::game_phase;
 
--- The lobby index predicate referenced the text value; rebuild it against
--- the enum so Postgres keeps using the partial index for random-room lookups.
-drop index if exists rooms_lobby_idx;
+-- Recreate the lobby index against the enum type.
 create index rooms_lobby_idx on rooms(phase, is_deleted)
   where phase = 'lobby'::game_phase and is_deleted = false;
 
