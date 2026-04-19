@@ -7,6 +7,7 @@ import { useRoomRealtime } from "@/hooks/useRoomRealtime";
 import { useHeartbeat } from "@/hooks/useHeartbeat";
 import { usePlayerSession } from "@/hooks/usePlayerSession";
 import { ScoreBar } from "@/components/layout/ScoreBar";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { createClient } from "@/lib/supabase/client";
 import type { Room, Player, Answer, Vote } from "@/types/game";
 
@@ -90,7 +91,9 @@ export default function RoomLayout({
   return (
     <div className="flex flex-col min-h-screen bg-[var(--background)]">
       {showScoreBar && <ScoreBar />}
-      <div className="flex-1 flex flex-col">{children}</div>
+      <div className="flex-1 flex flex-col">
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </div>
     </div>
   );
 }

@@ -1,22 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
+import { requireAdminAuth } from "@/lib/utils/adminAuth";
 import { randomUUID } from "crypto";
 
+const uploadSchema = z.object({
+  title: z.string().min(1).max(200),
+  subtitle_start_ms: z.number().int().min(0),
+  subtitle_end_ms: z.number().int().min(1),
+  duration_ms: z.number().int().min(1),
+});
+
 export async function POST(req: NextRequest) {
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
+
   const formData = await req.formData().catch(() => null);
   if (!formData) {
     return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
   }
 
   const file = formData.get("file") as File | null;
-  const title = formData.get("title") as string | null;
-  const subtitleStartMs = parseInt(formData.get("subtitle_start_ms") as string);
-  const subtitleEndMs = parseInt(formData.get("subtitle_end_ms") as string);
-  const durationMs = parseInt(formData.get("duration_ms") as string);
-
-  if (!file || !title || isNaN(subtitleStartMs) || isNaN(subtitleEndMs) || isNaN(durationMs)) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  if (!file || file.size === 0) {
+    return NextResponse.json({ error: "Missing video file" }, { status: 400 });
   }
+
+  const parsed = uploadSchema.safeParse({
+    title: formData.get("title"),
+    subtitle_start_ms: parseInt(formData.get("subtitle_start_ms") as string),
+    subtitle_end_ms: parseInt(formData.get("subtitle_end_ms") as string),
+    duration_ms: parseInt(formData.get("duration_ms") as string),
+  });
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid fields" }, { status: 400 });
+  }
+
+  const { title, subtitle_start_ms: subtitleStartMs, subtitle_end_ms: subtitleEndMs, duration_ms: durationMs } = parsed.data;
 
   const supabase = createServiceClient();
   const ext = file.name.split(".").pop() ?? "mp4";

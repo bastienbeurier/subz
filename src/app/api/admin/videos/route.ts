@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { requireAdminAuth } from "@/lib/utils/adminAuth";
 
 export async function GET() {
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
+
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("videos")
@@ -13,6 +17,9 @@ export async function GET() {
 }
 
 export async function DELETE(req: Request) {
+  const authError = await requireAdminAuth();
+  if (authError) return authError;
+
   const { id } = await req.json().catch(() => ({}));
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 

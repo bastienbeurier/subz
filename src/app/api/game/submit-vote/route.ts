@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
-import { calculateRoundScores } from "@/lib/game/scoring";
-import { ROUND_RESULTS_DURATION_MS } from "@/types/game";
-import type { Answer, Player } from "@/types/game";
 
 const schema = z.object({
   roomId: z.string().uuid(),
@@ -67,59 +64,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: voteError.message }, { status: 500 });
   }
 
-  // Check if all connected players have voted
-  const { count: playerCount } = await supabase
-    .from("players")
-    .select("*", { count: "exact", head: true })
-    .eq("room_id", roomId)
-    .eq("is_connected", true)
-    .eq("is_kicked", false);
-
-  const { count: voteCount } = await supabase
-    .from("votes")
-    .select("*", { count: "exact", head: true })
-    .eq("room_id", roomId)
-    .eq("round", round);
-
-  if ((playerCount ?? 0) > 0 && voteCount === playerCount) {
-    // All voted — tally scores and advance
-    const { data: answers } = await supabase
-      .from("answers")
-      .select()
-      .eq("room_id", roomId)
-      .eq("round", round);
-
-    const { data: players } = await supabase
-      .from("players")
-      .select()
-      .eq("room_id", roomId)
-      .eq("is_connected", true)
-      .eq("is_kicked", false);
-
-    if (answers && players) {
-      const scores = calculateRoundScores(
-        answers as Answer[],
-        players as Player[]
-      );
-      await Promise.all(
-        Array.from(scores.entries()).map(([playerId, pts]) => {
-          const player = (players as Player[]).find((p) => p.id === playerId);
-          if (!player) return Promise.resolve();
-          return supabase
-            .from("players")
-            .update({ score: player.score + pts })
-            .eq("id", playerId);
-        })
-      );
-    }
-
-    const autoAdvanceAt = new Date(Date.now() + ROUND_RESULTS_DURATION_MS).toISOString();
-    await supabase
-      .from("rooms")
-      .update({ phase: "round_results", auto_advance_at: autoAdvanceAt })
-      .eq("id", roomId)
-      .eq("phase", "voting");
-  }
+  // Scoring and phase transition are handled exclusively by advance-phase (voting case).
+  // Clients detect all-voted via Realtime (votes count === connected player count) and
+  // call POST /api/game/advance-phase with expectedPhase:"voting". This avoids a race
+  // condition where both this route and the voting deadline timer would tally scores.
 
   return NextResponse.json({ ok: true });
 }
