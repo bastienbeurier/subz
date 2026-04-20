@@ -17,6 +17,7 @@ export default function VideoUploadPage() {
   const [title, setTitle] = useState("");
   const [timecodes, setTimecodes] = useState<{ startMs: number; endMs: number; durationMs: number } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,25 +38,60 @@ export default function VideoUploadPage() {
     setUploading(true);
     setError(null);
 
-    const form = new FormData();
-    form.append("file", file);
-    form.append("title", title);
-    form.append("subtitle_start_ms", String(timecodes.startMs));
-    form.append("subtitle_end_ms", String(timecodes.endMs));
-    form.append("duration_ms", String(timecodes.durationMs));
+    try {
+      // Step 1: get a signed upload URL from Vercel (metadata only, no file)
+      setUploadProgress("Preparing upload…");
+      const prepRes = await fetch("/api/admin/videos/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          title,
+          subtitle_start_ms: timecodes.startMs,
+          subtitle_end_ms: timecodes.endMs,
+          duration_ms: timecodes.durationMs,
+        }),
+      });
 
-    const res = await fetch("/api/admin/videos/upload", {
-      method: "POST",
-      body: form,
-    });
+      if (!prepRes.ok) {
+        const d = await prepRes.json();
+        throw new Error(d.error ?? "Failed to prepare upload");
+      }
 
-    setUploading(false);
-    if (res.ok) {
+      const { signedUrl, storagePath, ...metadata } = await prepRes.json();
+
+      // Step 2: PUT the file directly to Supabase Storage (bypasses Vercel)
+      setUploadProgress("Uploading video…");
+      const putRes = await fetch(signedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type || "video/mp4" },
+        body: file,
+      });
+
+      if (!putRes.ok) {
+        throw new Error(`Storage upload failed (${putRes.status})`);
+      }
+
+      // Step 3: register the video row in the DB
+      setUploadProgress("Saving…");
+      const regRes = await fetch("/api/admin/videos/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storagePath, ...metadata }),
+      });
+
+      if (!regRes.ok) {
+        const d = await regRes.json();
+        throw new Error(d.error ?? "Failed to register video");
+      }
+
       setStep("done");
       setTimeout(() => router.push("/admin"), 1500);
-    } else {
-      const data = await res.json();
-      setError(data.error ?? "Upload failed");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -110,7 +146,7 @@ export default function VideoUploadPage() {
             loading={uploading}
             disabled={!title || !timecodes}
           >
-            Upload video
+            {uploading ? (uploadProgress ?? "Uploading…") : "Upload video"}
           </Button>
         </div>
       )}
