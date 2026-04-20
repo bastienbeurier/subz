@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -20,10 +20,10 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export default function JoinPage() {
+function JoinForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const mode = searchParams.get("mode"); // "create" | "random" | null (share link via /room/:code redirects here)
+  const mode = searchParams.get("mode"); // "create" | "random" | null
   const prefillCode = searchParams.get("code") ?? "";
 
   const [serverError, setServerError] = useState<string | null>(null);
@@ -50,7 +50,6 @@ export default function JoinPage() {
       url = "/api/rooms/random";
       body = { pseudo: values.pseudo };
     } else {
-      // Joining via share link — code is required
       url = "/api/rooms/join";
       body = { pseudo: values.pseudo, code: values.code ?? prefillCode };
     }
@@ -126,5 +125,13 @@ export default function JoinPage() {
         </Button>
       </form>
     </main>
+  );
+}
+
+export default function JoinPage() {
+  return (
+    <Suspense>
+      <JoinForm />
+    </Suspense>
   );
 }
