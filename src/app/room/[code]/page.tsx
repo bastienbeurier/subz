@@ -13,6 +13,7 @@ import { VotingPhase } from "@/components/game/VotingPhase";
 import { RoundResultsPhase } from "@/components/game/RoundResultsPhase";
 import { FinalPhase } from "@/components/game/FinalPhase";
 import JoinScreen from "@/components/game/JoinScreen";
+import { ChatPanel } from "@/components/game/ChatPanel";
 import { createClient } from "@/lib/supabase/client";
 import type { Video } from "@/types/game";
 
@@ -41,11 +42,14 @@ export default function RoomPage() {
     const supabase = createClient();
     supabase
       .from("videos")
-      .select()
+      .select("*, video_subtitles(*)")
       .eq("id", room.current_video_id)
       .single()
       .then(({ data }) => {
-        if (data) setVideo(data as Video);
+        if (data) {
+          const { video_subtitles, ...rest } = data as Record<string, unknown> & { video_subtitles: Video["subtitles"] };
+          setVideo({ ...(rest as object), subtitles: video_subtitles ?? [] } as Video);
+        }
       });
   }, [room?.current_video_id]);
 
@@ -88,9 +92,14 @@ export default function RoomPage() {
   };
 
   return (
-    <PhaseTransition phaseKey={transitionKey}>
-      {renderPhase()}
-    </PhaseTransition>
+    <div className="flex h-dvh overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <PhaseTransition phaseKey={transitionKey}>
+          {renderPhase()}
+        </PhaseTransition>
+      </div>
+      <ChatPanel roomId={room.id} />
+    </div>
   );
 }
 

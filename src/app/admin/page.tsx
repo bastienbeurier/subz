@@ -10,6 +10,7 @@ export default function AdminPage() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [toggling, setToggling] = useState<string | null>(null);
 
   const fetchVideos = async () => {
     const res = await fetch("/api/admin/videos");
@@ -32,10 +33,14 @@ export default function AdminPage() {
   };
 
   const handleToggle = async (video: Video) => {
+    setToggling(video.id);
     await fetch("/api/admin/videos", {
-      method: "DELETE", // reuse endpoint or add PATCH — for now toggle via direct update
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: video.id, is_active: !video.is_active }),
     });
-    // Simple toggle via upload route — skip for now, use Supabase dashboard
+    setToggling(null);
+    fetchVideos();
   };
 
   const handleLogout = async () => {
@@ -85,14 +90,31 @@ export default function AdminPage() {
                   {video.is_active ? "Active" : "Inactive"}
                 </span>
               </div>
-              <Button
-                variant="danger"
-                size="sm"
-                loading={deleting === video.id}
-                onClick={() => handleDelete(video.id)}
-              >
-                Delete
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  loading={toggling === video.id}
+                  onClick={() => handleToggle(video)}
+                >
+                  {video.is_active ? "Deactivate" : "Activate"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push(`/admin/videos/${video.id}`)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  loading={deleting === video.id}
+                  onClick={() => handleDelete(video.id)}
+                >
+                  Delete
+                </Button>
+              </div>
             </div>
           ))}
         </div>

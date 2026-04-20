@@ -37,6 +37,15 @@ export interface Player {
   created_at: string;
 }
 
+export interface VideoSubtitle {
+  id: string;
+  video_id: string;
+  start_ms: number;
+  end_ms: number;
+  text: string;
+  created_at: string;
+}
+
 export interface Video {
   id: string;
   title: string;
@@ -46,6 +55,15 @@ export interface Video {
   subtitle_start_ms: number;
   subtitle_end_ms: number;
   is_active: boolean;
+  created_at: string;
+  subtitles?: VideoSubtitle[];
+}
+
+export interface ChatMessage {
+  id: string;
+  room_id: string;
+  player_id: string | null;
+  text: string;
   created_at: string;
 }
 

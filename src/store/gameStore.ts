@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import type { Room, Player, Answer, Vote } from "@/types/game";
+import type { Room, Player, Answer, Vote, ChatMessage } from "@/types/game";
 
 interface GameState {
   // Synced from Supabase Realtime
@@ -8,6 +8,7 @@ interface GameState {
   players: Player[];
   answers: Answer[];
   votes: Vote[];
+  messages: ChatMessage[];
 
   // Local player identity (persisted in localStorage)
   myPlayerId: string | null;
@@ -33,6 +34,8 @@ interface GameActions {
   addVote: (vote: Vote) => void;
   removeVote: (voteId: string) => void;
   setVotes: (votes: Vote[]) => void;
+  addMessage: (message: ChatMessage) => void;
+  setMessages: (messages: ChatMessage[]) => void;
   setMyPlayer: (id: string, pseudo: string) => void;
   setSubmitted: (submitted: boolean) => void;
   setVoted: (voted: boolean) => void;
@@ -45,6 +48,7 @@ const initialState: GameState = {
   players: [],
   answers: [],
   votes: [],
+  messages: [],
   myPlayerId: null,
   myPseudo: null,
   hasSubmittedAnswer: false,
@@ -123,6 +127,18 @@ export const useGameStore = create<GameState & GameActions>()(
     setVotes: (votes) =>
       set((state) => {
         state.votes = votes;
+      }),
+
+    addMessage: (message) =>
+      set((state) => {
+        if (!state.messages.find((m) => m.id === message.id)) {
+          state.messages.push(message);
+        }
+      }),
+
+    setMessages: (messages) =>
+      set((state) => {
+        state.messages = messages;
       }),
 
     setMyPlayer: (id, pseudo) =>

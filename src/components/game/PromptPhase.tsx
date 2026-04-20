@@ -29,6 +29,7 @@ export function PromptPhase({ video }: PromptPhaseProps) {
           playCount={2}
           onComplete={handleComplete}
           autoPlay
+          staticSubtitles={video.subtitles}
         />
       </div>
       <div className="p-4 text-center">

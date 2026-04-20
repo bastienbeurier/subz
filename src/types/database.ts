@@ -192,6 +192,57 @@ export type Database = {
         };
         Relationships: [];
       };
+      video_subtitles: {
+        Row: {
+          id: string;
+          created_at: string;
+          video_id: string;
+          start_ms: number;
+          end_ms: number;
+          text: string;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          video_id: string;
+          start_ms: number;
+          end_ms: number;
+          text: string;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          video_id?: string;
+          start_ms?: number;
+          end_ms?: number;
+          text?: string;
+        };
+        Relationships: [];
+      };
+      messages: {
+        Row: {
+          id: string;
+          created_at: string;
+          room_id: string;
+          player_id: string | null;
+          text: string;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          room_id: string;
+          player_id?: string | null;
+          text: string;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          room_id?: string;
+          player_id?: string | null;
+          text?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

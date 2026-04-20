@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useGameStore } from "@/store/gameStore";
-import type { Room, Player, Answer, Vote } from "@/types/game";
+import type { Room, Player, Answer, Vote, ChatMessage } from "@/types/game";
 
 export function useRoomRealtime(roomId: string | null) {
   const supabaseRef = useRef(createClient());
@@ -15,6 +15,7 @@ export function useRoomRealtime(roomId: string | null) {
     removeAnswer,
     addVote,
     removeVote,
+    addMessage,
     setConnected,
   } = useGameStore();
 
@@ -149,6 +150,19 @@ export function useRoomRealtime(roomId: string | null) {
           if (old?.id) removeVote(old.id);
         }
       )
+      // Chat messages
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          addMessage(payload.new as ChatMessage);
+        }
+      )
       .subscribe((status) => {
         setConnected(status === "SUBSCRIBED");
       });
@@ -166,6 +180,7 @@ export function useRoomRealtime(roomId: string | null) {
     removeAnswer,
     addVote,
     removeVote,
+    addMessage,
     setConnected,
   ]);
 }

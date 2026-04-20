@@ -49,6 +49,7 @@ export function DiffusionPhase({ video }: DiffusionPhaseProps) {
           playCount={1}
           onComplete={handleComplete}
           autoPlay
+          staticSubtitles={video.subtitles}
         />
       </div>
     </main>

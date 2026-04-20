@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SubtitleOverlay } from "./SubtitleOverlay";
-import type { Video } from "@/types/game";
+import type { Video, VideoSubtitle } from "@/types/game";
 
 interface VideoPlayerProps {
   video: Video;
@@ -12,6 +12,7 @@ interface VideoPlayerProps {
   playCount?: number;
   onComplete?: () => void;
   autoPlay?: boolean;
+  staticSubtitles?: VideoSubtitle[];
 }
 
 export function VideoPlayer({
@@ -20,6 +21,7 @@ export function VideoPlayer({
   playCount = 1,
   onComplete,
   autoPlay = true,
+  staticSubtitles,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
@@ -32,6 +34,10 @@ export function VideoPlayer({
     subtitleText !== undefined &&
     currentTimeMs >= video.subtitle_start_ms &&
     (isPlaceholder || currentTimeMs <= video.subtitle_end_ms);
+
+  const activeStaticSubtitle = staticSubtitles?.find(
+    (s) => currentTimeMs >= s.start_ms && currentTimeMs <= s.end_ms
+  ) ?? null;
 
   useEffect(() => {
     playsRef.current = 0;
@@ -74,6 +80,16 @@ export function VideoPlayer({
         isVisible={showSubtitle}
         isPlaceholder={isPlaceholder}
       />
+      {activeStaticSubtitle && (
+        <div className="absolute bottom-2 left-0 right-0 flex justify-center px-4 pointer-events-none">
+          <span
+            className="bg-black/80 text-white text-lg font-semibold px-4 py-1 rounded-lg text-center max-w-[90%]"
+            style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}
+          >
+            {activeStaticSubtitle.text}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
