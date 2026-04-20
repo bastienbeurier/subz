@@ -27,10 +27,11 @@ export function VideoPlayer({
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
+  const isPlaceholder = subtitleText === null;
   const showSubtitle =
     subtitleText !== undefined &&
     currentTimeMs >= video.subtitle_start_ms &&
-    currentTimeMs <= video.subtitle_end_ms;
+    (isPlaceholder || currentTimeMs <= video.subtitle_end_ms);
 
   useEffect(() => {
     playsRef.current = 0;
@@ -71,7 +72,7 @@ export function VideoPlayer({
       <SubtitleOverlay
         text={subtitleText ?? null}
         isVisible={showSubtitle}
-        isPlaceholder={subtitleText === null}
+        isPlaceholder={isPlaceholder}
       />
     </div>
   );

@@ -5,7 +5,8 @@ interface SubtitleOverlayProps {
 }
 
 export function SubtitleOverlay({ text, isVisible, isPlaceholder }: SubtitleOverlayProps) {
-  if (!isVisible || text === null) return null;
+  if (!isVisible) return null;
+  if (text === null && !isPlaceholder) return null;
 
   return (
     <div className="absolute bottom-[12%] left-0 right-0 flex justify-center px-4 pointer-events-none">
@@ -17,7 +18,7 @@ export function SubtitleOverlay({ text, isVisible, isPlaceholder }: SubtitleOver
         }
         style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}
       >
-        {isPlaceholder ? "_ _ _ _ _" : text}
+        {isPlaceholder ? "insert subtitle here" : text}
       </span>
     </div>
   );
