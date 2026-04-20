@@ -25,7 +25,6 @@ export async function DELETE(req: Request) {
 
   const supabase = createServiceClient();
 
-  // Get storage path before deleting
   const { data: video } = await supabase
     .from("videos")
     .select("storage_path")
@@ -36,6 +35,7 @@ export async function DELETE(req: Request) {
     await supabase.storage.from("videos").remove([video.storage_path]);
   }
 
+  // ON DELETE SET NULL on the FK handles rooms.current_video_id automatically
   const { error } = await supabase.from("videos").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

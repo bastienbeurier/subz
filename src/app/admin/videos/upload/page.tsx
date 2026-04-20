@@ -136,7 +136,7 @@ export default function VideoUploadPage() {
           />
           {timecodes && (
             <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 text-sm">
-              Timecodes set: {(timecodes.startMs / 1000).toFixed(2)}s → {(timecodes.endMs / 1000).toFixed(2)}s
+              Subtitle starts at {(timecodes.startMs / 1000).toFixed(2)}s (plays to end)
             </div>
           )}
           {error && <p className="text-red-400 text-sm">{error}</p>}
