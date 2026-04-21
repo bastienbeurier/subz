@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         .eq("room_id", candidate.id)
         .eq("is_connected", true);
 
-      if ((count ?? 0) < MAX_PLAYERS) {
+      if ((count ?? 0) > 0 && (count ?? 0) < MAX_PLAYERS) {
         targetRoom = candidate;
         break;
       }

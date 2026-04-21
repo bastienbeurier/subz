@@ -64,15 +64,19 @@ export async function POST(req: NextRequest) {
     .eq("id", roomId)
     .single();
 
-  if (room && room.phase === "lobby" && room.creator_id) {
-    const { data: creator } = await supabase
-      .from("players")
-      .select("last_seen_at")
-      .eq("id", room.creator_id)
-      .maybeSingle();
+  if (room && room.phase === "lobby") {
+    let isCreatorStale = !room.creator_id;
 
-    const isCreatorStale =
-      !creator || new Date(creator.last_seen_at) < new Date(Date.now() - 30_000);
+    if (room.creator_id && !isCreatorStale) {
+      const { data: creator } = await supabase
+        .from("players")
+        .select("last_seen_at")
+        .eq("id", room.creator_id)
+        .maybeSingle();
+
+      isCreatorStale =
+        !creator || new Date(creator.last_seen_at) < new Date(Date.now() - 30_000);
+    }
 
     if (isCreatorStale) {
       const { data: activePlayers } = await supabase
