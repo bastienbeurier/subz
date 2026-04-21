@@ -34,8 +34,7 @@ export function VideoPlayer({
   const isPlaceholder = subtitleText === null;
   const showSubtitle =
     subtitleText !== undefined &&
-    currentTimeMs >= video.subtitle_start_ms &&
-    (isPlaceholder || currentTimeMs <= video.subtitle_end_ms);
+    currentTimeMs >= video.subtitle_start_ms;
 
   const activeStaticSubtitle = staticSubtitles?.find(
     (s) => currentTimeMs >= s.start_ms && currentTimeMs <= s.end_ms
