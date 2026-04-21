@@ -25,6 +25,7 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
+  const [currentPlay, setCurrentPlay] = useState(1);
   const playsRef = useRef(0);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
@@ -41,6 +42,7 @@ export function VideoPlayer({
 
   useEffect(() => {
     playsRef.current = 0;
+    setCurrentPlay(1);
     const el = videoRef.current;
     if (!el) return;
     el.currentTime = 0;
@@ -55,6 +57,7 @@ export function VideoPlayer({
   const handleEnded = () => {
     playsRef.current += 1;
     if (playsRef.current < playCount) {
+      setCurrentPlay(playsRef.current + 1);
       const el = videoRef.current;
       if (el) {
         el.currentTime = 0;
@@ -64,6 +67,8 @@ export function VideoPlayer({
       onCompleteRef.current?.();
     }
   };
+
+  const progressPct = video.duration_ms > 0 ? (currentTimeMs / video.duration_ms) * 100 : 0;
 
   return (
     <div className="relative w-full bg-black" style={{ aspectRatio: "16/9" }}>
@@ -90,6 +95,17 @@ export function VideoPlayer({
           </span>
         </div>
       )}
+      {playCount > 1 && (
+        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white/90 text-xs font-medium px-2.5 py-1 rounded-full pointer-events-none">
+          {currentPlay === 1 ? "1st watch" : "2nd watch"}
+        </div>
+      )}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 pointer-events-none">
+        <div
+          className="h-full bg-white/70"
+          style={{ width: `${progressPct}%`, transition: "width 0.1s linear" }}
+        />
+      </div>
     </div>
   );
 }
