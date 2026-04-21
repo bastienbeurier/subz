@@ -96,11 +96,11 @@ export function LobbyPhase() {
         >
           Start game
         </Button>
-      ) : (
+      ) : players.length >= 2 ? (
         <p className="text-white/40 text-sm text-center">
           Waiting for the host to start the game…
         </p>
-      )}
+      ) : null}
     </main>
   );
 }
