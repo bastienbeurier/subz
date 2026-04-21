@@ -13,8 +13,8 @@ export function SubtitleOverlay({ text, isVisible, isPlaceholder }: SubtitleOver
       <span
         className={
           isPlaceholder
-            ? "bg-black/70 text-white/50 text-xl font-bold px-4 py-1.5 rounded-lg tracking-widest border-2 border-dashed border-white/30"
-            : "bg-black/80 text-white text-xl font-bold px-4 py-1.5 rounded-lg text-center max-w-[90%]"
+            ? "bg-black/70 text-white/50 text-xl md:text-3xl font-bold px-4 py-1.5 rounded-lg tracking-widest border-2 border-dashed border-white/30"
+            : "bg-black/80 text-white text-xl md:text-3xl font-bold px-4 py-1.5 rounded-lg text-center max-w-[90%]"
         }
         style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}
       >
