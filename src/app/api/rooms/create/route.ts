@@ -68,12 +68,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to create player" }, { status: 500 });
   }
 
-  const { data: updatedRoom } = await supabase
+  const { data: updatedRoom, error: updateError } = await supabase
     .from("rooms")
     .update({ creator_id: player.id })
     .eq("id", room.id)
     .select()
     .single();
+
+  if (updateError || !updatedRoom) {
+    console.error("Set creator_id error:", updateError);
+  } else {
+    console.log("Room creator_id set:", updatedRoom.creator_id, "player:", player.id);
+  }
 
   return NextResponse.json({ room: updatedRoom ?? room, player }, { status: 201 });
 }
