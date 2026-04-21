@@ -5,17 +5,15 @@ import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { useGameStore, selectConnectedPlayers, selectMyPlayer } from "@/store/gameStore";
 import { useShallow } from "zustand/react/shallow";
-import { cn } from "@/lib/utils/cn";
 
 export function LobbyPhase() {
   const room = useGameStore((s) => s.room);
   const players = useGameStore(useShallow(selectConnectedPlayers));
   const myPlayer = useGameStore(selectMyPlayer);
   const [copying, setCopying] = useState(false);
-  const [readyLoading, setReadyLoading] = useState(false);
+  const [startLoading, setStartLoading] = useState(false);
 
-  const isReady = myPlayer?.is_ready ?? false;
-  const allReady = players.length >= 2 && players.every((p) => p.is_ready);
+  const isCreator = myPlayer?.id === room?.creator_id;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(window.location.href);
@@ -23,21 +21,17 @@ export function LobbyPhase() {
     setTimeout(() => setCopying(false), 2000);
   };
 
-  const handleToggleReady = async () => {
+  const handleStart = async () => {
     if (!myPlayer || !room) return;
-    setReadyLoading(true);
+    setStartLoading(true);
     try {
-      await fetch("/api/players/ready", {
+      await fetch("/api/rooms/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          playerId: myPlayer.id,
-          roomId: room.id,
-          ready: !isReady,
-        }),
+        body: JSON.stringify({ playerId: myPlayer.id, roomId: room.id }),
       });
     } finally {
-      setReadyLoading(false);
+      setStartLoading(false);
     }
   };
 
@@ -63,12 +57,7 @@ export function LobbyPhase() {
         {players.map((player) => (
           <div
             key={player.id}
-            className={cn(
-              "flex items-center gap-3 p-3 rounded-2xl border-2 transition-colors",
-              player.is_ready
-                ? "border-green-500/50 bg-green-500/5"
-                : "border-white/10 bg-white/5"
-            )}
+            className="flex items-center gap-3 p-3 rounded-2xl border-2 border-white/10 bg-white/5"
           >
             <Avatar
               pseudo={player.pseudo}
@@ -81,37 +70,37 @@ export function LobbyPhase() {
                 <span className="text-white/40 text-sm ml-1">(you)</span>
               )}
             </span>
-            {player.is_ready ? (
-              <span className="text-green-400 font-bold text-sm">Ready ✓</span>
-            ) : (
-              <span className="text-white/30 text-sm">Waiting…</span>
+            {player.id === room?.creator_id && (
+              <span className="text-yellow-400 text-xs font-semibold uppercase tracking-wide">
+                Host
+              </span>
             )}
           </div>
         ))}
       </div>
 
-      {/* Status message */}
+      {/* Status / action */}
       {players.length < 2 && (
         <p className="text-white/40 text-sm text-center">
           Waiting for at least one more player…
         </p>
       )}
-      {players.length >= 2 && !allReady && (
+
+      {isCreator ? (
+        <Button
+          variant="primary"
+          onClick={handleStart}
+          loading={startLoading}
+          disabled={players.length < 2}
+          className="w-full max-w-sm"
+        >
+          Start game
+        </Button>
+      ) : (
         <p className="text-white/40 text-sm text-center">
-          Everyone needs to be ready to start
+          Waiting for the host to start the game…
         </p>
       )}
-
-      {/* Ready toggle */}
-      <Button
-        variant={isReady ? "secondary" : "primary"}
-        onClick={handleToggleReady}
-        loading={readyLoading}
-        disabled={players.length < 2}
-        className="w-full max-w-sm"
-      >
-        {isReady ? "Not ready" : "I'm ready!"}
-      </Button>
     </main>
   );
 }

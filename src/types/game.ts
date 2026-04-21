@@ -11,6 +11,7 @@ export interface Room {
   id: string;
   code: string;
   phase: GamePhase;
+  creator_id: string | null;
   current_round: number;
   current_video_id: string | null;
   used_video_ids: string[];

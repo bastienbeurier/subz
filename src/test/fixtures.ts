@@ -8,6 +8,7 @@ export function makeRoom(overrides: Partial<Room> = {}): Room {
     id: uid("room"),
     code: "ABC234",
     phase: "lobby",
+    creator_id: null,
     current_round: 0,
     current_video_id: null,
     used_video_ids: [],

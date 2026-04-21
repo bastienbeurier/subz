@@ -44,6 +44,43 @@ export async function POST(req: NextRequest) {
       .from("rooms")
       .update({ is_deleted: true })
       .eq("id", roomId);
+    return NextResponse.json({ ok: true });
+  }
+
+  // Transfer creator role if the current creator has gone stale
+  const { data: room } = await supabase
+    .from("rooms")
+    .select("creator_id, phase")
+    .eq("id", roomId)
+    .single();
+
+  if (room && room.phase === "lobby" && room.creator_id) {
+    const { data: creator } = await supabase
+      .from("players")
+      .select("last_seen_at")
+      .eq("id", room.creator_id)
+      .maybeSingle();
+
+    const isCreatorStale =
+      !creator || new Date(creator.last_seen_at) < new Date(Date.now() - 30_000);
+
+    if (isCreatorStale) {
+      const { data: activePlayers } = await supabase
+        .from("players")
+        .select("id")
+        .eq("room_id", roomId)
+        .gte("last_seen_at", staleThreshold)
+        .order("created_at", { ascending: true })
+        .limit(1);
+
+      const newCreatorId = activePlayers?.[0]?.id ?? null;
+      if (newCreatorId) {
+        await supabase
+          .from("rooms")
+          .update({ creator_id: newCreatorId })
+          .eq("id", roomId);
+      }
+    }
   }
 
   return NextResponse.json({ ok: true });
