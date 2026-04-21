@@ -17,6 +17,10 @@ interface TimecodeCaptureProps {
   startOnly?: boolean;
   /** Static subtitles to preview on the video */
   staticSubtitles?: StaticSubtitlePreview[];
+  /** Disable global keyboard shortcuts (use when multiple players are on the page) */
+  noKeyboardShortcuts?: boolean;
+  /** Label for the save button */
+  saveLabel?: string;
   onCapture: (startMs: number, endMs: number, durationMs: number) => void;
 }
 
@@ -26,6 +30,8 @@ export function TimecodeCapture({
   initialEndMs = 0,
   startOnly = false,
   staticSubtitles,
+  noKeyboardShortcuts = false,
+  saveLabel = "Save timecodes",
   onCapture,
 }: TimecodeCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -106,11 +112,11 @@ export function TimecodeCapture({
       if (e.key === "ArrowLeft") el.currentTime = Math.max(0, el.currentTime - 1 / 30);
       if (e.key === "ArrowRight") el.currentTime = Math.min(el.duration, el.currentTime + 1 / 30);
     };
-    window.addEventListener("keydown", handleKey);
+    if (!noKeyboardShortcuts) window.addEventListener("keydown", handleKey);
     return () => {
       el.removeEventListener("pause", onPause);
       el.removeEventListener("play", onPlay);
-      window.removeEventListener("keydown", handleKey);
+      if (!noKeyboardShortcuts) window.removeEventListener("keydown", handleKey);
     };
   }, [startMs, endMs]);
 
@@ -207,12 +213,14 @@ export function TimecodeCapture({
       )}
 
       <Button onClick={handleSave} disabled={startOnly ? !startMs : (!startMs || !endMs)} className="w-full">
-        Save timecodes
+        {saveLabel}
       </Button>
 
-      <p className="text-white/30 text-xs text-center">
-        Space = play/pause · ← → = frame step · [ = set start{startOnly ? "" : " · ] = set end"}
-      </p>
+      {!noKeyboardShortcuts && (
+        <p className="text-white/30 text-xs text-center">
+          Space = play/pause · ← → = frame step · [ = set start{startOnly ? "" : " · ] = set end"}
+        </p>
+      )}
     </div>
   );
 }

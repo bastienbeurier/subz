@@ -201,6 +201,18 @@ export default function VideoEditPage() {
               <div key={sub.id} className="p-3 rounded-xl bg-white/5 border border-white/10">
                 {editingSubId === sub.id ? (
                   <div className="space-y-2">
+                    <TimecodeCapture
+                      videoUrl={video.public_url}
+                      initialStartMs={parseFloat(editSubStart) * 1000 || 0}
+                      initialEndMs={parseFloat(editSubEnd) * 1000 || 0}
+                      staticSubtitles={subtitles.filter((s) => s.id !== sub.id)}
+                      noKeyboardShortcuts
+                      saveLabel="Use these timecodes"
+                      onCapture={(s, e) => {
+                        setEditSubStart(String(s / 1000));
+                        setEditSubEnd(String(e / 1000));
+                      }}
+                    />
                     <div className="grid grid-cols-2 gap-2">
                       <Input id={`es-${sub.id}`} label="Start (s)" value={editSubStart} onChange={(e) => setEditSubStart(e.target.value)} />
                       <Input id={`ee-${sub.id}`} label="End (s)" value={editSubEnd} onChange={(e) => setEditSubEnd(e.target.value)} />
@@ -229,6 +241,16 @@ export default function VideoEditPage() {
         )}
 
         <div className="space-y-2">
+          <TimecodeCapture
+            videoUrl={video.public_url}
+            staticSubtitles={subtitles}
+            noKeyboardShortcuts
+            saveLabel="Use these timecodes"
+            onCapture={(s, e) => {
+              setNewSubStart(String(s / 1000));
+              setNewSubEnd(String(e / 1000));
+            }}
+          />
           <div className="grid grid-cols-2 gap-2">
             <Input id="ns-start" label="Start (s)" value={newSubStart} onChange={(e) => setNewSubStart(e.target.value)} placeholder="e.g. 3.5" />
             <Input id="ns-end" label="End (s)" value={newSubEnd} onChange={(e) => setNewSubEnd(e.target.value)} placeholder="e.g. 7" />
