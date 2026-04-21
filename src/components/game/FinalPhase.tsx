@@ -75,7 +75,7 @@ export function FinalPhase() {
 }
 
 interface PodiumEntryProps {
-  player: { id: string; pseudo: string; avatar_index: number; score: number };
+  player: { id: string; pseudo: string; avatar_index: number; score: number; is_connected: boolean };
   rank: number;
 }
 
@@ -89,15 +89,18 @@ function PodiumEntry({ player, rank }: PodiumEntryProps) {
 
   return (
     <div
-      className={`flex items-center gap-3 p-4 rounded-2xl border-2 ${
+      className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-opacity ${
         rankStyles[rank] ?? "border-white/10 bg-white/5"
-      }`}
+      } ${player.is_connected ? "" : "opacity-40"}`}
     >
       <span className="text-xl w-8 text-center">
         {rankEmoji[rank] ?? <span className="text-white/30 font-bold text-sm">{rank}</span>}
       </span>
       <Avatar pseudo={player.pseudo} avatarIndex={player.avatar_index} size="md" />
       <span className="flex-1 font-bold text-white">{player.pseudo}</span>
+      {!player.is_connected && (
+        <span className="text-white/30 text-xs mr-1">left</span>
+      )}
       <span
         className={`font-black text-lg tabular-nums ${
           rank === 1 ? "text-yellow-400" : "text-white/60"

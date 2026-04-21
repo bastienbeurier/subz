@@ -81,10 +81,18 @@ export function RoundResultsPhase() {
         <h3 className="text-white/40 text-xs uppercase tracking-widest mb-2">Scores</h3>
         <div className="flex flex-col gap-2">
           {players.map((player, i) => (
-            <div key={player.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <div
+              key={player.id}
+              className={`flex items-center gap-3 p-3 rounded-xl bg-white/5 transition-opacity ${
+                player.is_connected ? "" : "opacity-40"
+              }`}
+            >
               <span className="text-white/30 w-5 text-sm font-bold">{i + 1}</span>
               <Avatar pseudo={player.pseudo} avatarIndex={player.avatar_index} size="sm" />
               <span className="flex-1 text-white font-medium">{player.pseudo}</span>
+              {!player.is_connected && (
+                <span className="text-white/30 text-xs mr-1">left</span>
+              )}
               <span className="text-violet-400 font-black">{player.score}</span>
             </div>
           ))}

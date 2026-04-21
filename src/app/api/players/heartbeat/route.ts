@@ -31,8 +31,18 @@ export async function POST(req: NextRequest) {
     .update({ last_activity_at: now })
     .eq("id", roomId);
 
-  // Soft-delete room if no players have been seen recently
   const staleThreshold = new Date(Date.now() - 30_000).toISOString();
+
+  // Mark individually stale players as disconnected so game-advancement logic
+  // (allAnswered / allVoted) stops waiting for them.
+  await supabase
+    .from("players")
+    .update({ is_connected: false })
+    .eq("room_id", roomId)
+    .eq("is_connected", true)
+    .lt("last_seen_at", staleThreshold);
+
+  // Soft-delete room if no players have been seen recently
   const { count } = await supabase
     .from("players")
     .select("*", { count: "exact", head: true })
