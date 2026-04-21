@@ -83,7 +83,7 @@ export function VideoPlayer({
       {activeStaticSubtitle && (
         <div className="absolute bottom-2 left-0 right-0 flex justify-center px-4 pointer-events-none">
           <span
-            className="bg-black/80 text-white text-lg font-semibold px-4 py-1 rounded-lg text-center max-w-[90%]"
+            className="bg-black/80 text-white text-lg md:text-3xl font-semibold px-4 py-1 rounded-lg text-center max-w-[90%]"
             style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}
           >
             {activeStaticSubtitle.text}
