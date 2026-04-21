@@ -43,7 +43,7 @@ export function FinalPhase() {
   };
 
   return (
-    <main className="flex flex-col min-h-screen px-4 py-8 gap-8 items-center">
+    <main className="flex flex-col flex-1 min-h-0 px-4 py-8 gap-8 items-center overflow-y-auto">
       <div className="text-center space-y-1">
         <p className="text-white/40 text-xs uppercase tracking-widest">Game over</p>
         <h1 className="text-4xl font-black text-white">Final scores</h1>

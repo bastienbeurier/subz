@@ -36,7 +36,7 @@ export function DiffusionPhase({ video }: DiffusionPhaseProps) {
   }
 
   return (
-    <main className="flex flex-col min-h-screen">
+    <main className="flex flex-col flex-1 min-h-0">
       <div className="p-4 text-center">
         <p className="text-white/40 text-xs uppercase tracking-widest">
           Subtitle {(room?.diffusion_index ?? 0) + 1} of {answers.length}

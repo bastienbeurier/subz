@@ -42,7 +42,7 @@ export function LobbyPhase() {
   };
 
   return (
-    <main className="flex flex-col items-center gap-8 px-6 py-10 min-h-screen overflow-y-auto">
+    <main className="flex flex-col items-center gap-8 px-6 py-10 flex-1 min-h-0 overflow-y-auto">
       {/* Room code */}
       <div className="text-center">
         <p className="text-white/40 text-xs uppercase tracking-widest mb-1">

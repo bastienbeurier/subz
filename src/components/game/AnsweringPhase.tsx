@@ -88,7 +88,7 @@ export function AnsweringPhase() {
   };
 
   return (
-    <main className="flex flex-col min-h-screen px-4 py-6 gap-6 overflow-y-auto">
+    <main className="flex flex-col flex-1 min-h-0 px-4 py-6 gap-6 overflow-y-auto">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-white">Write your subtitle</h2>
         {room?.answering_deadline && (

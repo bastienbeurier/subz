@@ -30,7 +30,7 @@ export function RoundResultsPhase() {
     currentVotes.filter((v) => v.answer_id === answerId).length;
 
   return (
-    <main className="flex flex-col min-h-screen px-4 py-6 gap-6">
+    <main className="flex flex-col flex-1 min-h-0 px-4 py-6 gap-6 overflow-y-auto">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-white">Round results</h2>
         {room?.auto_advance_at && (

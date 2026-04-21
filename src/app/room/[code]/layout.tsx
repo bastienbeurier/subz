@@ -85,9 +85,9 @@ export default function RoomLayout({
     !["lobby"].includes(room.phase);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[var(--background)]">
+    <div className="flex flex-col h-dvh overflow-hidden bg-[var(--background)]">
       {showScoreBar && <ScoreBar />}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         <ErrorBoundary>{children}</ErrorBoundary>
       </div>
     </div>
