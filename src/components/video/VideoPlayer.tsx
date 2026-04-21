@@ -26,6 +26,7 @@ export function VideoPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
   const [currentPlay, setCurrentPlay] = useState(1);
+  const [needsTap, setNeedsTap] = useState(false);
   const playsRef = useRef(0);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
@@ -46,7 +47,8 @@ export function VideoPlayer({
     const el = videoRef.current;
     if (!el) return;
     el.currentTime = 0;
-    if (autoPlay) el.play().catch(() => {});
+    setNeedsTap(false);
+    if (autoPlay) el.play().catch(() => { setNeedsTap(true); });
   }, [video.id, autoPlay]);
 
   const handleTimeUpdate = () => {
@@ -80,6 +82,21 @@ export function VideoPlayer({
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
       />
+      {needsTap && (
+        <button
+          className="absolute inset-0 flex items-center justify-center bg-black/40"
+          onClick={() => {
+            videoRef.current?.play().then(() => setNeedsTap(false)).catch(() => {});
+          }}
+        >
+          <div className="flex flex-col items-center gap-2 text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-16 h-16 drop-shadow-lg">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <span className="text-sm font-medium drop-shadow">Tap to play</span>
+          </div>
+        </button>
+      )}
       <SubtitleOverlay
         text={subtitleText ?? null}
         isVisible={showSubtitle}
