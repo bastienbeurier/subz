@@ -24,6 +24,9 @@ export default function VideoEditPage() {
   const [startMs, setStartMs] = useState(0);
   const [endMs, setEndMs] = useState(0);
 
+  // Current video position (shared from the top TimecodeCapture)
+  const [videoCurrentMs, setVideoCurrentMs] = useState(0);
+
   // New subtitle form
   const [newSubStart, setNewSubStart] = useState("");
   const [newSubEnd, setNewSubEnd] = useState("");
@@ -174,6 +177,7 @@ export default function VideoEditPage() {
         initialStartMs={startMs}
         startOnly
         staticSubtitles={subtitles}
+        onTimeUpdate={setVideoCurrentMs}
         onCapture={(s, e) => handleTimecodes(s, e)}
       />
 
@@ -201,21 +205,19 @@ export default function VideoEditPage() {
               <div key={sub.id} className="p-3 rounded-xl bg-white/5 border border-white/10">
                 {editingSubId === sub.id ? (
                   <div className="space-y-2">
-                    <TimecodeCapture
-                      videoUrl={video.public_url}
-                      initialStartMs={parseFloat(editSubStart) * 1000 || 0}
-                      initialEndMs={parseFloat(editSubEnd) * 1000 || 0}
-                      staticSubtitles={subtitles.filter((s) => s.id !== sub.id)}
-                      noKeyboardShortcuts
-                      saveLabel="Use these timecodes"
-                      onCapture={(s, e) => {
-                        setEditSubStart(String(s / 1000));
-                        setEditSubEnd(String(e / 1000));
-                      }}
-                    />
                     <div className="grid grid-cols-2 gap-2">
-                      <Input id={`es-${sub.id}`} label="Start (s)" value={editSubStart} onChange={(e) => setEditSubStart(e.target.value)} />
-                      <Input id={`ee-${sub.id}`} label="End (s)" value={editSubEnd} onChange={(e) => setEditSubEnd(e.target.value)} />
+                      <div className="flex flex-col gap-1">
+                        <Input id={`es-${sub.id}`} label="Start (s)" value={editSubStart} onChange={(e) => setEditSubStart(e.target.value)} />
+                        <button className="text-xs text-violet-400 hover:text-violet-300 text-left" onClick={() => setEditSubStart(String(videoCurrentMs / 1000))}>
+                          Set from video
+                        </button>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <Input id={`ee-${sub.id}`} label="End (s)" value={editSubEnd} onChange={(e) => setEditSubEnd(e.target.value)} />
+                        <button className="text-xs text-violet-400 hover:text-violet-300 text-left" onClick={() => setEditSubEnd(String(videoCurrentMs / 1000))}>
+                          Set from video
+                        </button>
+                      </div>
                     </div>
                     <Input id={`et-${sub.id}`} label="Text" value={editSubText} onChange={(e) => setEditSubText(e.target.value)} />
                     <div className="flex gap-2">
@@ -241,19 +243,19 @@ export default function VideoEditPage() {
         )}
 
         <div className="space-y-2">
-          <TimecodeCapture
-            videoUrl={video.public_url}
-            staticSubtitles={subtitles}
-            noKeyboardShortcuts
-            saveLabel="Use these timecodes"
-            onCapture={(s, e) => {
-              setNewSubStart(String(s / 1000));
-              setNewSubEnd(String(e / 1000));
-            }}
-          />
           <div className="grid grid-cols-2 gap-2">
-            <Input id="ns-start" label="Start (s)" value={newSubStart} onChange={(e) => setNewSubStart(e.target.value)} placeholder="e.g. 3.5" />
-            <Input id="ns-end" label="End (s)" value={newSubEnd} onChange={(e) => setNewSubEnd(e.target.value)} placeholder="e.g. 7" />
+            <div className="flex flex-col gap-1">
+              <Input id="ns-start" label="Start (s)" value={newSubStart} onChange={(e) => setNewSubStart(e.target.value)} placeholder="e.g. 3.5" />
+              <button className="text-xs text-violet-400 hover:text-violet-300 text-left" onClick={() => setNewSubStart(String(videoCurrentMs / 1000))}>
+                Set from video
+              </button>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Input id="ns-end" label="End (s)" value={newSubEnd} onChange={(e) => setNewSubEnd(e.target.value)} placeholder="e.g. 7" />
+              <button className="text-xs text-violet-400 hover:text-violet-300 text-left" onClick={() => setNewSubEnd(String(videoCurrentMs / 1000))}>
+                Set from video
+              </button>
+            </div>
           </div>
           <Input id="ns-text" label="Text" value={newSubText} onChange={(e) => setNewSubText(e.target.value)} placeholder="Subtitle text…" />
           {subError && <p className="text-red-400 text-xs">{subError}</p>}

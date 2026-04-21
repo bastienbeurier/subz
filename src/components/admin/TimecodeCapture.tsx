@@ -21,6 +21,8 @@ interface TimecodeCaptureProps {
   noKeyboardShortcuts?: boolean;
   /** Label for the save button */
   saveLabel?: string;
+  /** Called on every time update so parent can read current position */
+  onTimeUpdate?: (currentMs: number) => void;
   onCapture: (startMs: number, endMs: number, durationMs: number) => void;
 }
 
@@ -32,6 +34,7 @@ export function TimecodeCapture({
   staticSubtitles,
   noKeyboardShortcuts = false,
   saveLabel = "Save timecodes",
+  onTimeUpdate: onTimeUpdateProp,
   onCapture,
 }: TimecodeCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -51,6 +54,7 @@ export function TimecodeCapture({
     if (!el) return;
     const ms = el.currentTime * 1000;
     setCurrentMs(ms);
+    onTimeUpdateProp?.(ms);
   };
 
   const handleLoadedMetadata = () => {
