@@ -78,7 +78,7 @@ export function VideoPlayer({
       <video
         ref={videoRef}
         src={video.public_url}
-        className="w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover"
         playsInline
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
