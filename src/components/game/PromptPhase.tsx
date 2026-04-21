@@ -2,6 +2,7 @@
 
 import { useGameStore } from "@/store/gameStore";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
+import { useTimer } from "@/hooks/useTimer";
 import type { Video } from "@/types/game";
 
 interface PromptPhaseProps {
@@ -11,7 +12,7 @@ interface PromptPhaseProps {
 export function PromptPhase({ video }: PromptPhaseProps) {
   const room = useGameStore((s) => s.room);
 
-  const handleComplete = async () => {
+  const handleAdvance = async () => {
     if (!room) return;
     await fetch("/api/game/advance-phase", {
       method: "POST",
@@ -20,6 +21,8 @@ export function PromptPhase({ video }: PromptPhaseProps) {
     });
   };
 
+  useTimer({ deadline: room?.auto_advance_at ?? null, onExpire: handleAdvance });
+
   return (
     <main className="flex flex-col flex-1 min-h-0">
       <div className="flex-1 flex flex-col justify-center">
@@ -27,7 +30,7 @@ export function PromptPhase({ video }: PromptPhaseProps) {
           video={video}
           subtitleText={null}
           playCount={2}
-          onComplete={handleComplete}
+          onComplete={handleAdvance}
           autoPlay
           staticSubtitles={video.subtitles}
         />

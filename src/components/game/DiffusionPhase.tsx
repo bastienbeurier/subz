@@ -3,6 +3,7 @@
 import { useGameStore, selectCurrentAnswers } from "@/store/gameStore";
 import { useShallow } from "zustand/react/shallow";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
+import { useTimer } from "@/hooks/useTimer";
 import type { Video } from "@/types/game";
 
 interface DiffusionPhaseProps {
@@ -15,7 +16,7 @@ export function DiffusionPhase({ video }: DiffusionPhaseProps) {
 
   const currentAnswer = answers[room?.diffusion_index ?? 0];
 
-  const handleComplete = async () => {
+  const handleAdvance = async () => {
     if (!room) return;
     await fetch("/api/game/next-diffusion", {
       method: "POST",
@@ -26,6 +27,8 @@ export function DiffusionPhase({ video }: DiffusionPhaseProps) {
       }),
     });
   };
+
+  useTimer({ deadline: room?.auto_advance_at ?? null, onExpire: handleAdvance });
 
   if (!currentAnswer) {
     return (
@@ -44,10 +47,11 @@ export function DiffusionPhase({ video }: DiffusionPhaseProps) {
       </div>
       <div className="flex-1 flex flex-col justify-center">
         <VideoPlayer
+          key={room?.diffusion_index}
           video={video}
           subtitleText={currentAnswer.text}
           playCount={1}
-          onComplete={handleComplete}
+          onComplete={handleAdvance}
           autoPlay
           staticSubtitles={video.subtitles}
         />

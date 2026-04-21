@@ -105,3 +105,5 @@ export const ANSWERING_DURATION_MS = 60_000;
 export const VOTING_DURATION_MS = 60_000;
 export const ROUND_RESULTS_DURATION_MS = 15_000;
 export const FINAL_DURATION_MS = 20_000;
+export const PROMPT_BUFFER_MS = 5_000;
+export const DIFFUSION_STEP_BUFFER_MS = 3_000;

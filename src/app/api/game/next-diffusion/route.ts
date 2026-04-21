@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
-import { VOTING_DURATION_MS } from "@/types/game";
+import { VOTING_DURATION_MS, DIFFUSION_STEP_BUFFER_MS } from "@/types/game";
 
 const schema = z.object({
   roomId: z.string().uuid(),
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const { data: room } = await supabase
     .from("rooms")
-    .select("phase, current_round, diffusion_index")
+    .select("phase, current_round, diffusion_index, current_video_id")
     .eq("id", roomId)
     .eq("is_deleted", false)
     .single();
@@ -34,12 +34,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, diffusion_index: room.diffusion_index });
   }
 
-  const { count: answerCount } = await supabase
-    .from("answers")
-    .select("*", { count: "exact", head: true })
-    .eq("room_id", roomId)
-    .eq("round", room.current_round);
+  const [{ count: answerCount }, videoResult] = await Promise.all([
+    supabase
+      .from("answers")
+      .select("*", { count: "exact", head: true })
+      .eq("room_id", roomId)
+      .eq("round", room.current_round),
+    room.current_video_id
+      ? supabase.from("videos").select("duration_ms").eq("id", room.current_video_id).single()
+      : Promise.resolve({ data: null }),
+  ]);
 
+  const videoDurationMs = videoResult.data?.duration_ms ?? 30_000;
   const nextIndex = currentIndex + 1;
 
   if (nextIndex >= (answerCount ?? 0)) {
@@ -47,13 +53,14 @@ export async function POST(req: NextRequest) {
     const votingDeadline = new Date(Date.now() + VOTING_DURATION_MS).toISOString();
     await supabase
       .from("rooms")
-      .update({ phase: "voting", voting_deadline: votingDeadline, diffusion_index: nextIndex })
+      .update({ phase: "voting", voting_deadline: votingDeadline, diffusion_index: nextIndex, auto_advance_at: null })
       .eq("id", roomId)
       .eq("phase", "diffusion");
   } else {
+    const stepDeadline = new Date(Date.now() + videoDurationMs + DIFFUSION_STEP_BUFFER_MS).toISOString();
     await supabase
       .from("rooms")
-      .update({ diffusion_index: nextIndex })
+      .update({ diffusion_index: nextIndex, auto_advance_at: stepDeadline })
       .eq("id", roomId)
       .eq("diffusion_index", currentIndex);
   }

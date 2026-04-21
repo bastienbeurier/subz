@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
+import { PROMPT_BUFFER_MS } from "@/types/game";
 
 const schema = z.object({
   playerId: z.string().uuid(),
@@ -57,13 +58,16 @@ export async function POST(req: NextRequest) {
     // Pick a random first video
     const { data: videos } = await supabase
       .from("videos")
-      .select("id")
+      .select("id, duration_ms")
       .eq("is_active", true);
 
     const pick = videos && videos.length > 0
       ? videos[Math.floor(Math.random() * videos.length)]
       : null;
     const videoId = pick?.id ?? null;
+    const promptDeadline = pick
+      ? new Date(Date.now() + pick.duration_ms * 2 + PROMPT_BUFFER_MS).toISOString()
+      : null;
 
     await supabase
       .from("rooms")
@@ -72,6 +76,7 @@ export async function POST(req: NextRequest) {
         current_round: 1,
         current_video_id: videoId,
         used_video_ids: videoId ? [videoId] : [],
+        auto_advance_at: promptDeadline,
       })
       .eq("id", roomId)
       .eq("phase", "lobby"); // idempotency guard

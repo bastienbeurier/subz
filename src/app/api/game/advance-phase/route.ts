@@ -8,6 +8,8 @@ import {
   VOTING_DURATION_MS,
   ROUND_RESULTS_DURATION_MS,
   FINAL_DURATION_MS,
+  PROMPT_BUFFER_MS,
+  DIFFUSION_STEP_BUFFER_MS,
 } from "@/types/game";
 import type { Answer } from "@/types/game";
 
@@ -90,9 +92,21 @@ export async function POST(req: NextRequest) {
         )
       );
 
+      let diffusionDeadline: string | null = null;
+      if (room.current_video_id) {
+        const { data: vid } = await supabase
+          .from("videos")
+          .select("duration_ms")
+          .eq("id", room.current_video_id)
+          .single();
+        if (vid) {
+          diffusionDeadline = new Date(now.getTime() + vid.duration_ms + DIFFUSION_STEP_BUFFER_MS).toISOString();
+        }
+      }
+
       const { error } = await supabase
         .from("rooms")
-        .update({ phase: "diffusion", diffusion_index: 0 })
+        .update({ phase: "diffusion", diffusion_index: 0, auto_advance_at: diffusionDeadline })
         .eq("id", roomId)
         .eq("phase", "answering");
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -171,7 +185,7 @@ export async function POST(req: NextRequest) {
         const lastVideoId = room.current_video_id;
 
         const pickRandom = async (excludeIds: string[]) => {
-          let q = supabase.from("videos").select("id").eq("is_active", true);
+          let q = supabase.from("videos").select("id, duration_ms").eq("is_active", true);
           if (excludeIds.length > 0) {
             q = q.not("id", "in", `(${excludeIds.join(",")})`);
           }
@@ -198,6 +212,10 @@ export async function POST(req: NextRequest) {
             : [...usedIds, video.id]
           : usedIds;
 
+        const promptDeadline = video
+          ? new Date(now.getTime() + video.duration_ms * 2 + PROMPT_BUFFER_MS).toISOString()
+          : null;
+
         const { error } = await supabase
           .from("rooms")
           .update({
@@ -208,7 +226,7 @@ export async function POST(req: NextRequest) {
             diffusion_index: 0,
             answering_deadline: null,
             voting_deadline: null,
-            auto_advance_at: null,
+            auto_advance_at: promptDeadline,
           })
           .eq("id", roomId)
           .eq("phase", "round_results");
