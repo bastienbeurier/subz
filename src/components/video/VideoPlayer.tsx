@@ -32,9 +32,11 @@ export function VideoPlayer({
   onCompleteRef.current = onComplete;
 
   const isPlaceholder = subtitleText === null;
+  // Placeholder obeys the start time (shows the gap window to the player).
+  // Real answer text is always visible — it's the content being reviewed.
   const showSubtitle =
     subtitleText !== undefined &&
-    currentTimeMs >= video.subtitle_start_ms;
+    (isPlaceholder ? currentTimeMs >= video.subtitle_start_ms : true);
 
   const activeStaticSubtitle = staticSubtitles?.find(
     (s) => currentTimeMs >= s.start_ms && currentTimeMs <= s.end_ms
