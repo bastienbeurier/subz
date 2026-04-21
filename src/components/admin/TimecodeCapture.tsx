@@ -19,8 +19,6 @@ interface TimecodeCaptureProps {
   staticSubtitles?: StaticSubtitlePreview[];
   /** Disable global keyboard shortcuts (use when multiple players are on the page) */
   noKeyboardShortcuts?: boolean;
-  /** Label for the save button */
-  saveLabel?: string;
   /** Called on every time update so parent can read current position */
   onTimeUpdate?: (currentMs: number) => void;
   onCapture: (startMs: number, endMs: number, durationMs: number) => void;
@@ -33,7 +31,6 @@ export function TimecodeCapture({
   startOnly = false,
   staticSubtitles,
   noKeyboardShortcuts = false,
-  saveLabel = "Save timecodes",
   onTimeUpdate: onTimeUpdateProp,
   onCapture,
 }: TimecodeCaptureProps) {
@@ -43,6 +40,7 @@ export function TimecodeCapture({
   const [currentMs, setCurrentMs] = useState(0);
   const [durationMs, setDurationMs] = useState(0);
   const [paused, setPaused] = useState(true);
+  const [saved, setSaved] = useState(false);
 
   const fmt = (ms: number) => {
     const s = ms / 1000;
@@ -63,6 +61,8 @@ export function TimecodeCapture({
     setDurationMs(Math.round(el.duration * 1000));
   };
 
+  const flash = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+
   const handleSetStart = () => {
     const ms = Math.round((videoRef.current?.currentTime ?? 0) * 1000);
     setStartMs(ms);
@@ -71,6 +71,22 @@ export function TimecodeCapture({
   const handleSetEnd = () => {
     const ms = Math.round((videoRef.current?.currentTime ?? 0) * 1000);
     setEndMs(ms);
+  };
+
+  const handleSetStartAndSave = () => {
+    const ms = Math.round((videoRef.current?.currentTime ?? 0) * 1000);
+    const dur = Math.round((videoRef.current?.duration ?? 0) * 1000);
+    setStartMs(ms);
+    onCapture(ms, startOnly ? dur : endMs, dur);
+    flash();
+  };
+
+  const handleSetEndAndSave = () => {
+    const ms = Math.round((videoRef.current?.currentTime ?? 0) * 1000);
+    const dur = Math.round((videoRef.current?.duration ?? 0) * 1000);
+    setEndMs(ms);
+    onCapture(startMs, ms, dur);
+    flash();
   };
 
   const handlePlayPause = () => {
@@ -89,11 +105,6 @@ export function TimecodeCapture({
     const ms = Number(e.target.value);
     el.currentTime = ms / 1000;
     setCurrentMs(ms);
-  };
-
-  const handleSave = () => {
-    const dur = Math.round((videoRef.current?.duration ?? 0) * 1000);
-    onCapture(startMs, startOnly ? dur : endMs, dur);
   };
 
   useEffect(() => {
@@ -194,31 +205,33 @@ export function TimecodeCapture({
       {/* Timecode controls */}
       {startOnly ? (
         <div className="flex items-center gap-3">
-          <p className="text-white/50 text-xs flex-1">Subtitle starts at <span className="font-mono text-white/70">{fmt(startMs)}</span></p>
-          <Button variant="secondary" size="sm" onClick={handleSetStart}>
+          <p className="text-white/50 text-xs flex-1">
+            Subtitle starts at <span className="font-mono text-white/70">{fmt(startMs)}</span>
+            {saved && <span className="ml-2 text-green-400">Saved ✓</span>}
+          </p>
+          <Button variant="secondary" size="sm" onClick={handleSetStartAndSave}>
             Set start [
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1">
-            <p className="text-white/50 text-xs uppercase tracking-wider">Start [ {fmt(startMs)}</p>
-            <Button variant="secondary" size="sm" onClick={handleSetStart}>
-              Set start [
-            </Button>
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <p className="text-white/50 text-xs uppercase tracking-wider">Start [ {fmt(startMs)}</p>
+              <Button variant="secondary" size="sm" onClick={handleSetStartAndSave}>
+                Set start [
+              </Button>
+            </div>
+            <div className="flex flex-col gap-1">
+              <p className="text-white/50 text-xs uppercase tracking-wider">End ] {fmt(endMs)}</p>
+              <Button variant="secondary" size="sm" onClick={handleSetEndAndSave}>
+                Set end ]
+              </Button>
+            </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <p className="text-white/50 text-xs uppercase tracking-wider">End ] {fmt(endMs)}</p>
-            <Button variant="secondary" size="sm" onClick={handleSetEnd}>
-              Set end ]
-            </Button>
-          </div>
-        </div>
+          {saved && <p className="text-green-400 text-xs text-center">Saved ✓</p>}
+        </>
       )}
-
-      <Button onClick={handleSave} disabled={startOnly ? !startMs : (!startMs || !endMs)} className="w-full">
-        {saveLabel}
-      </Button>
 
       {!noKeyboardShortcuts && (
         <p className="text-white/30 text-xs text-center">

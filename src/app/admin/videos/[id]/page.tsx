@@ -64,13 +64,19 @@ export default function VideoEditPage() {
 
   useEffect(() => { fetchData(); }, [id]);
 
-  const handleSaveMeta = async () => {
+  const handleSaveMeta = async (overrides: { title?: string; isActive?: boolean; startMs?: number; endMs?: number } = {}) => {
     setSaving(true);
     setError(null);
     const res = await fetch("/api/admin/videos", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, title, is_active: isActive, subtitle_start_ms: startMs, subtitle_end_ms: endMs }),
+      body: JSON.stringify({
+        id,
+        title: overrides.title ?? title,
+        is_active: overrides.isActive ?? isActive,
+        subtitle_start_ms: overrides.startMs ?? startMs,
+        subtitle_end_ms: overrides.endMs ?? endMs,
+      }),
     });
     if (!res.ok) {
       const d = await res.json();
@@ -82,6 +88,13 @@ export default function VideoEditPage() {
   const handleTimecodes = (newStartMs: number, newEndMs: number) => {
     setStartMs(newStartMs);
     setEndMs(newEndMs);
+    handleSaveMeta({ startMs: newStartMs, endMs: newEndMs });
+  };
+
+  const handleToggleActive = () => {
+    const newVal = !isActive;
+    setIsActive(newVal);
+    handleSaveMeta({ isActive: newVal });
   };
 
   const handleAddSubtitle = async () => {
@@ -169,7 +182,7 @@ export default function VideoEditPage() {
         <h1 className="text-xl font-black text-white">Edit video</h1>
       </div>
 
-      <Input id="title" label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <Input id="title" label="Title" value={title} onChange={(e) => setTitle(e.target.value)} onBlur={() => handleSaveMeta()} />
 
       {/* Video player + timecode capture */}
       <TimecodeCapture
@@ -181,17 +194,15 @@ export default function VideoEditPage() {
         onCapture={(s, e) => handleTimecodes(s, e)}
       />
 
-      {/* Active toggle + save */}
-      <div className="flex items-center justify-between gap-4">
-        <label className="flex items-center gap-3 cursor-pointer" onClick={() => setIsActive(!isActive)}>
+      {/* Active toggle */}
+      <div className="flex items-center gap-4">
+        <label className="flex items-center gap-3 cursor-pointer" onClick={handleToggleActive}>
           <div className={`w-10 h-6 rounded-full transition-colors ${isActive ? "bg-violet-600" : "bg-white/20"} relative`}>
             <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${isActive ? "translate-x-5" : "translate-x-1"}`} />
           </div>
           <span className="text-white/70 text-sm">Active</span>
         </label>
-        <Button onClick={handleSaveMeta} loading={saving} size="sm">
-          Save changes
-        </Button>
+        {saving && <span className="text-white/30 text-xs">Saving…</span>}
       </div>
       {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
 
@@ -260,7 +271,7 @@ export default function VideoEditPage() {
           <Input id="ns-text" label="Text" value={newSubText} onChange={(e) => setNewSubText(e.target.value)} placeholder="Subtitle text…" />
           {subError && <p className="text-red-400 text-xs">{subError}</p>}
           <Button variant="secondary" size="sm" onClick={handleAddSubtitle} loading={addingSubtitle}>
-            Add subtitle
+            Confirm subtitle
           </Button>
         </div>
       </div>
