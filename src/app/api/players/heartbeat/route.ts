@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     .update({ last_activity_at: now })
     .eq("id", roomId);
 
-  const staleThreshold = new Date(Date.now() - 30_000).toISOString();
+  const staleThreshold = new Date(Date.now() - 10_000).toISOString();
 
   // Mark individually stale players as disconnected so game-advancement logic
   // (allAnswered / allVoted) stops waiting for them.

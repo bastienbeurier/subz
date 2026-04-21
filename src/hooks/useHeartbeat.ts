@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const HEARTBEAT_INTERVAL_MS = 8_000;
+const HEARTBEAT_INTERVAL_MS = 3_000;
 
 export function useHeartbeat(playerId: string | null, roomId: string | null) {
   useEffect(() => {
