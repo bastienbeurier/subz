@@ -32,9 +32,11 @@ export function VideoPlayer({
   onCompleteRef.current = onComplete;
 
   const isPlaceholder = subtitleText === null;
+  // Real text (diffusion phase) is always visible once provided.
+  // Null/placeholder (prompt phase) respects the time gate for suspense.
   const showSubtitle =
     subtitleText !== undefined &&
-    currentTimeMs >= video.subtitle_start_ms;
+    (subtitleText !== null || currentTimeMs >= video.subtitle_start_ms);
 
   const activeStaticSubtitle = staticSubtitles?.find(
     (s) => currentTimeMs >= s.start_ms && currentTimeMs <= s.end_ms
