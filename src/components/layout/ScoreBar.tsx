@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Avatar } from "@/components/ui/Avatar";
 import { useGameStore, selectConnectedPlayers, selectMyPlayer } from "@/store/gameStore";
 import { useShallow } from "zustand/react/shallow";
@@ -20,7 +21,11 @@ export function ScoreBar() {
 
   return (
     <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-sm border-b border-white/10 px-3 py-2">
-      <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+      <div className="flex items-center gap-1">
+        <Link href="/" className="shrink-0 mr-2 text-white/40 hover:text-white/80 transition-colors text-lg leading-none" title="Leave game">
+          ←
+        </Link>
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1">
         {room && room.current_round > 0 && (
           <span className="shrink-0 text-xs font-bold text-white/40 mr-2">
             {room.current_round}/{TOTAL_ROUNDS}
@@ -51,6 +56,7 @@ export function ScoreBar() {
             />
           );
         })}
+        </div>
       </div>
     </div>
   );
