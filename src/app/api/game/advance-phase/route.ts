@@ -49,11 +49,11 @@ export async function POST(req: NextRequest) {
 
   switch (expectedPhase) {
     case "prompt": {
-      // prompt → answering: set deadline so every client has the same clock
-      const answeringDeadline = new Date(now.getTime() + ANSWERING_DURATION_MS).toISOString();
+      // prompt → answering: leave answering_deadline null so the clock only
+      // starts when the first answer is submitted (see submit-answer route).
       const { error } = await supabase
         .from("rooms")
-        .update({ phase: "answering", answering_deadline: answeringDeadline })
+        .update({ phase: "answering", answering_deadline: null })
         .eq("id", roomId)
         .eq("phase", "prompt");
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
