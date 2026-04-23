@@ -18,6 +18,7 @@ export function makeRoom(overrides: Partial<Room> = {}): Room {
     auto_advance_at: null,
     last_activity_at: new Date().toISOString(),
     is_deleted: false,
+    language: "en",
     created_at: new Date().toISOString(),
     ...overrides,
   };
