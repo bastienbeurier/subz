@@ -57,3 +57,14 @@ input[type="submit"] {
   -webkit-user-select: none;
   user-select: none;
 }
+
+/* Native video subtitle cue styling (used by VideoPlayer text tracks) */
+::cue {
+  background-color: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  /* Browsers ignore padding/border-radius in ::cue, but bg + shadow do the job */
+}

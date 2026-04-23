@@ -1,18 +1,90 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { SubtitleOverlay } from "./SubtitleOverlay";
 import type { Video, VideoSubtitle } from "@/types/game";
 
 interface VideoPlayerProps {
   video: Video;
-  // If provided, show the subtitle text; if null show placeholder; if undefined hide entirely
+  // If provided, show the subtitle text at subtitle_start_ms; if null show
+  // placeholder; if undefined hide entirely.
   subtitleText?: string | null;
   // How many times to play before firing onComplete (default 1)
   playCount?: number;
   onComplete?: () => void;
   autoPlay?: boolean;
   staticSubtitles?: VideoSubtitle[];
+}
+
+/**
+ * Injects subtitles as native browser text-track cues so they are tied
+ * directly to the video timeline — no React state, no onTimeUpdate race.
+ *
+ * Two tracks are created per mount:
+ *   1. Static context subtitles (video_subtitles rows) – shown at their
+ *      configured timecodes, positioned near the bottom of the frame.
+ *   2. The player's answer / placeholder – shown from subtitle_start_ms to
+ *      the end of the clip, positioned above the static line so both are
+ *      readable simultaneously.
+ *
+ * Both tracks are set to 'disabled' on cleanup so they don't linger if the
+ * video element is reused (though key-based remounts already give a fresh
+ * element each time).
+ */
+function injectSubtitleTracks(
+  el: HTMLVideoElement,
+  staticSubtitles: VideoSubtitle[] | undefined,
+  subtitleText: string | null | undefined,
+  subtitleStartMs: number,
+  durationMs: number
+): () => void {
+  const tracks: TextTrack[] = [];
+
+  // Track 1: static context subtitles
+  if (staticSubtitles?.length) {
+    try {
+      const t = el.addTextTrack("subtitles", "context", "und");
+      t.mode = "showing";
+      for (const s of staticSubtitles) {
+        const cue = new VTTCue(s.start_ms / 1000, s.end_ms / 1000, s.text);
+        // Position at the very bottom of the frame
+        cue.snapToLines = false;
+        cue.line = 93;
+        cue.position = 50;
+        cue.size = 90;
+        cue.align = "center";
+        t.addCue(cue);
+      }
+      tracks.push(t);
+    } catch {
+      // VTTCue not supported — subtitles simply won't show on this browser
+    }
+  }
+
+  // Track 2: player answer / placeholder
+  if (subtitleText !== undefined) {
+    try {
+      const label = subtitleText === null ? "insert subtitle here" : subtitleText;
+      const startSec = subtitleStartMs / 1000;
+      const endSec = Math.max(durationMs / 1000, startSec + 0.1);
+      const t = el.addTextTrack("subtitles", "answer", "und");
+      t.mode = "showing";
+      const cue = new VTTCue(startSec, endSec, label);
+      // Position ~12 % above the bottom so it sits above the static line
+      cue.snapToLines = false;
+      cue.line = 80;
+      cue.position = 50;
+      cue.size = 90;
+      cue.align = "center";
+      t.addCue(cue);
+      tracks.push(t);
+    } catch {
+      // ignore
+    }
+  }
+
+  return () => {
+    for (const t of tracks) t.mode = "disabled";
+  };
 }
 
 export function VideoPlayer({
@@ -31,14 +103,22 @@ export function VideoPlayer({
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
-  const isPlaceholder = subtitleText === null;
-  const showSubtitle =
-    subtitleText !== undefined &&
-    currentTimeMs >= video.subtitle_start_ms;
-
-  const activeStaticSubtitle = staticSubtitles?.find(
-    (s) => currentTimeMs >= s.start_ms && currentTimeMs <= s.end_ms
-  ) ?? null;
+  // Inject native subtitle tracks once the video element is ready.
+  // Runs again if the video changes; component remounts (via key) also
+  // give a fresh element so cleanup is automatic.
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    return injectSubtitleTracks(
+      el,
+      staticSubtitles,
+      subtitleText,
+      video.subtitle_start_ms,
+      video.duration_ms
+    );
+    // subtitleText and staticSubtitles are stable per video.id for a given mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [video.id]);
 
   useEffect(() => {
     playsRef.current = 0;
@@ -46,6 +126,7 @@ export function VideoPlayer({
     const el = videoRef.current;
     if (!el) return;
     el.currentTime = 0;
+    setCurrentTimeMs(0);
     setNeedsTap(false);
     if (autoPlay) el.play().catch(() => { setNeedsTap(true); });
   }, [video.id, autoPlay]);
@@ -95,21 +176,6 @@ export function VideoPlayer({
             <span className="text-sm font-medium drop-shadow">Tap to play</span>
           </div>
         </button>
-      )}
-      <SubtitleOverlay
-        text={subtitleText ?? null}
-        isVisible={showSubtitle}
-        isPlaceholder={isPlaceholder}
-      />
-      {activeStaticSubtitle && (
-        <div className="absolute bottom-2 left-0 right-0 flex justify-center px-4 pointer-events-none">
-          <span
-            className="bg-black/80 text-white text-lg md:text-3xl font-semibold px-4 py-1 rounded-lg text-center max-w-[90%]"
-            style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}
-          >
-            {activeStaticSubtitle.text}
-          </span>
-        </div>
       )}
       {playCount > 1 && (
         <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white/90 text-xs font-medium px-2.5 py-1 rounded-full pointer-events-none">
