@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { useShallow } from "zustand/react/shallow";
 import { createClient } from "@/lib/supabase/client";
-import type { ChatMessage } from "@/types/game";
+import type { ChatMessage, KickVotePayload, KickPayload } from "@/types/game";
 
 interface ChatPanelProps {
   roomId: string;
@@ -101,6 +101,40 @@ export function ChatPanel({ roomId }: ChatPanelProps) {
         <p className="text-white/20 text-xs text-center mt-4">No messages yet</p>
       )}
       {messages.map((msg) => {
+        if (msg.type === "kick_vote") {
+          let label = msg.text;
+          try {
+            const p = JSON.parse(msg.text) as KickVotePayload;
+            label = `${p.voter_pseudo} a voté pour expulser ${p.target_pseudo} (${p.votes}/${p.needed})`;
+          } catch {
+            // fallback to raw text
+          }
+          return (
+            <div key={msg.id} className="flex justify-center">
+              <span className="text-xs text-red-400/90 bg-red-950/40 px-2.5 py-1 rounded-full text-center">
+                {label}
+              </span>
+            </div>
+          );
+        }
+
+        if (msg.type === "kick") {
+          let label = msg.text;
+          try {
+            const p = JSON.parse(msg.text) as KickPayload;
+            label = `${p.target_pseudo} a été expulsé de la room`;
+          } catch {
+            // fallback to raw text
+          }
+          return (
+            <div key={msg.id} className="flex justify-center">
+              <span className="text-xs text-red-500 bg-red-950/60 px-2.5 py-1 rounded-full font-semibold text-center">
+                {label}
+              </span>
+            </div>
+          );
+        }
+
         const player = getPlayer(msg.player_id);
         const isMe = msg.player_id === myPlayerId;
         return (

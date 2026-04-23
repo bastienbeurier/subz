@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useGameStore } from "@/store/gameStore";
-import type { Room, Player, Answer, Vote, ChatMessage } from "@/types/game";
+import type { Room, Player, Answer, Vote, ChatMessage, VoteKick } from "@/types/game";
 
 export function useRoomRealtime(roomId: string | null) {
   const supabaseRef = useRef(createClient());
@@ -16,6 +16,8 @@ export function useRoomRealtime(roomId: string | null) {
     addVote,
     removeVote,
     addMessage,
+    addVoteKick,
+    removeVoteKick,
     setConnected,
   } = useGameStore();
 
@@ -163,6 +165,33 @@ export function useRoomRealtime(roomId: string | null) {
           addMessage(payload.new as ChatMessage);
         }
       )
+      // Vote kicks — INSERT
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "vote_kicks",
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          addVoteKick(payload.new as VoteKick);
+        }
+      )
+      // Vote kicks — DELETE (after kick or when voter leaves)
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "vote_kicks",
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          const old = payload.old as { id?: string } | undefined;
+          if (old?.id) removeVoteKick(old.id);
+        }
+      )
       .subscribe((status) => {
         setConnected(status === "SUBSCRIBED");
       });
@@ -181,6 +210,8 @@ export function useRoomRealtime(roomId: string | null) {
     addVote,
     removeVote,
     addMessage,
+    addVoteKick,
+    removeVoteKick,
     setConnected,
   ]);
 }

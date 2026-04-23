@@ -65,7 +65,27 @@ export interface ChatMessage {
   room_id: string;
   player_id: string | null;
   text: string;
+  type: "chat" | "kick_vote" | "kick";
   created_at: string;
+}
+
+export interface VoteKick {
+  id: string;
+  room_id: string;
+  voter_player_id: string;
+  target_player_id: string;
+  created_at: string;
+}
+
+export interface KickVotePayload {
+  voter_pseudo: string;
+  target_pseudo: string;
+  votes: number;
+  needed: number;
+}
+
+export interface KickPayload {
+  target_pseudo: string;
 }
 
 export interface Answer {
