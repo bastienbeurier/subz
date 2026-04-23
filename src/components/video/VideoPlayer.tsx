@@ -47,9 +47,9 @@ function injectSubtitleTracks(
       for (const s of staticSubtitles) {
         const cue = new VTTCue(s.start_ms / 1000, s.end_ms / 1000, s.text);
         cue.snapToLines = false;
-        cue.line = 88;
+        cue.line = 82;
         cue.position = 50;
-        cue.size = 90;
+        cue.size = 92;
         cue.align = "center";
         t.addCue(cue);
       }
@@ -62,7 +62,11 @@ function injectSubtitleTracks(
   // Track 2: player answer / placeholder
   if (subtitleText !== undefined) {
     try {
-      const label = subtitleText === null ? "insert subtitle here" : subtitleText;
+      // Wrap placeholder in a VTT class tag so ::cue(c.placeholder) can
+      // target it with a distinct colour while leaving answer text white.
+      const label = subtitleText === null
+        ? "<c.placeholder>INSERT SUBTITLE HERE</c.placeholder>"
+        : subtitleText;
       const startSec = subtitleStartMs / 1000;
       const endSec = Math.max(durationMs / 1000, startSec + 0.1);
       const t = el.addTextTrack("subtitles", "answer", "und");

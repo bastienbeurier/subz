@@ -6,7 +6,7 @@ import { ANSWERING_DURATION_MS } from "@/types/game";
 const schema = z.object({
   roomId: z.string().uuid(),
   playerId: z.string().uuid(),
-  text: z.string().min(1).max(120),
+  text: z.string().min(1).max(180),
   round: z.number().int().min(1),
 });
 
