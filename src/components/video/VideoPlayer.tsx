@@ -32,9 +32,6 @@ interface VideoPlayerProps {
 function injectSubtitleTrack(
   el: HTMLVideoElement,
   staticSubtitles: VideoSubtitle[] | undefined,
-  subtitleText: string | null | undefined,
-  subtitleStartMs: number,
-  durationMs: number
 ): () => void {
   try {
     const track = el.addTextTrack("subtitles", "game", "und");
@@ -43,31 +40,19 @@ function injectSubtitleTrack(
     const makeCue = (startSec: number, endSec: number, text: string) => {
       const cue = new VTTCue(startSec, endSec, text);
       cue.snapToLines = false;
-      cue.line = 82;      // ~18 % from the bottom
+      cue.line = 82;
       cue.position = 50;
-      cue.size = 92;      // 92 % width — long lines wrap cleanly
+      cue.size = 92;
       cue.align = "center";
       return cue;
     };
 
-    // Static context subtitles
     for (const s of staticSubtitles ?? []) {
       track.addCue(makeCue(s.start_ms / 1000, s.end_ms / 1000, s.text));
     }
 
-    // Player answer or placeholder
-    if (subtitleText !== undefined) {
-      const label = subtitleText === null
-        ? "<c.placeholder>INSERT SUBTITLE HERE</c.placeholder>"
-        : subtitleText;
-      const startSec = subtitleStartMs / 1000;
-      const endSec = Math.max(durationMs / 1000, startSec + 0.1);
-      track.addCue(makeCue(startSec, endSec, label));
-    }
-
     return () => { track.mode = "disabled"; };
   } catch {
-    // VTTCue not supported — fail silently
     return () => {};
   }
 }
@@ -94,13 +79,7 @@ export function VideoPlayer({
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
-    return injectSubtitleTrack(
-      el,
-      staticSubtitles,
-      subtitleText,
-      video.subtitle_start_ms,
-      video.duration_ms
-    );
+    return injectSubtitleTrack(el, staticSubtitles);
     // subtitleText and staticSubtitles are stable per video.id for a given mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [video.id]);
@@ -137,8 +116,10 @@ export function VideoPlayer({
 
   const progressPct = video.duration_ms > 0 ? (currentTimeMs / video.duration_ms) * 100 : 0;
 
+  const showPlayerSub = subtitleText !== undefined && currentTimeMs >= video.subtitle_start_ms;
+
   return (
-    <div className="relative w-full bg-black" style={{ aspectRatio: "16/9" }}>
+    <div className="relative w-full bg-black overflow-hidden" style={{ aspectRatio: "16/9" }}>
       <video
         ref={videoRef}
         src={video.public_url}
@@ -165,6 +146,32 @@ export function VideoPlayer({
       {playCount > 1 && (
         <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white/90 text-xs font-medium px-2.5 py-1 rounded-full pointer-events-none">
           {currentPlay === 1 ? "1st watch" : "2nd watch"}
+        </div>
+      )}
+      {showPlayerSub && (
+        <div
+          className="absolute left-0 right-0 flex justify-center pointer-events-none"
+          style={{ top: "82%" }}
+        >
+          <span
+            style={{
+              display: "inline-block",
+              backgroundColor: "rgba(0,0,0,0.82)",
+              color: subtitleText === null ? "#facc15" : "#fff",
+              fontFamily: "system-ui, -apple-system, sans-serif",
+              fontSize: "1.35rem",
+              fontWeight: 700,
+              lineHeight: 1.3,
+              textShadow: "0 1px 6px rgba(0,0,0,1)",
+              padding: "0.1em 0.4em",
+              textAlign: "center",
+              maxWidth: "92%",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}
+          >
+            {subtitleText === null ? "INSERT SUBTITLE HERE" : subtitleText}
+          </span>
         </div>
       )}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 pointer-events-none">
