@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
   if (connectedCount <= 2) {
     return NextResponse.json(
-      { error: "Au moins 3 joueurs sont nécessaires pour voter un expulsion" },
+      { error: "At least 3 players are required to vote kick" },
       { status: 400 }
     );
   }
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
   if (insertError) {
     if (insertError.code === "23505") {
       return NextResponse.json(
-        { error: "Vous avez déjà voté pour expulser ce joueur" },
+        { error: "You already voted to kick this player" },
         { status: 409 }
       );
     }

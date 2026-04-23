@@ -82,10 +82,10 @@ export default function RoomPage() {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-6">
         <p className="text-4xl">🚫</p>
-        <p className="text-white font-bold text-xl">Tu as été expulsé</p>
-        <p className="text-white/50 text-sm">La majorité des joueurs a voté pour ton expulsion.</p>
+        <p className="text-white font-bold text-xl">You were kicked</p>
+        <p className="text-white/50 text-sm">The majority of players voted to remove you from the room.</p>
         <a href="/" className="mt-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-bold text-sm transition-colors">
-          Retour à l'accueil
+          Back to home
         </a>
       </div>
     );

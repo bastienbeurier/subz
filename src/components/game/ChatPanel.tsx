@@ -105,7 +105,7 @@ export function ChatPanel({ roomId }: ChatPanelProps) {
           let label = msg.text;
           try {
             const p = JSON.parse(msg.text) as KickVotePayload;
-            label = `${p.voter_pseudo} a voté pour expulser ${p.target_pseudo} (${p.votes}/${p.needed})`;
+            label = `${p.voter_pseudo} voted to kick ${p.target_pseudo} (${p.votes}/${p.needed})`;
           } catch {
             // fallback to raw text
           }
@@ -122,7 +122,7 @@ export function ChatPanel({ roomId }: ChatPanelProps) {
           let label = msg.text;
           try {
             const p = JSON.parse(msg.text) as KickPayload;
-            label = `${p.target_pseudo} a été expulsé de la room`;
+            label = `${p.target_pseudo} was kicked from the room`;
           } catch {
             // fallback to raw text
           }
