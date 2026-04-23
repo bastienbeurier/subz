@@ -229,6 +229,7 @@ export type Database = {
           room_id: string;
           player_id: string | null;
           text: string;
+          type: "chat" | "kick_vote" | "kick";
         };
         Insert: {
           id?: string;
@@ -236,6 +237,7 @@ export type Database = {
           room_id: string;
           player_id?: string | null;
           text: string;
+          type?: "chat" | "kick_vote" | "kick";
         };
         Update: {
           id?: string;
@@ -243,6 +245,31 @@ export type Database = {
           room_id?: string;
           player_id?: string | null;
           text?: string;
+          type?: "chat" | "kick_vote" | "kick";
+        };
+        Relationships: [];
+      };
+      vote_kicks: {
+        Row: {
+          id: string;
+          created_at: string;
+          room_id: string;
+          voter_player_id: string;
+          target_player_id: string;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          room_id: string;
+          voter_player_id: string;
+          target_player_id: string;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          room_id?: string;
+          voter_player_id?: string;
+          target_player_id?: string;
         };
         Relationships: [];
       };
