@@ -46,9 +46,8 @@ function injectSubtitleTracks(
       t.mode = "showing";
       for (const s of staticSubtitles) {
         const cue = new VTTCue(s.start_ms / 1000, s.end_ms / 1000, s.text);
-        // Position at the very bottom of the frame
         cue.snapToLines = false;
-        cue.line = 93;
+        cue.line = 88;
         cue.position = 50;
         cue.size = 90;
         cue.align = "center";
@@ -69,9 +68,8 @@ function injectSubtitleTracks(
       const t = el.addTextTrack("subtitles", "answer", "und");
       t.mode = "showing";
       const cue = new VTTCue(startSec, endSec, label);
-      // Position ~12 % above the bottom so it sits above the static line
       cue.snapToLines = false;
-      cue.line = 80;
+      cue.line = 88;
       cue.position = 50;
       cue.size = 90;
       cue.align = "center";
@@ -157,7 +155,7 @@ export function VideoPlayer({
       <video
         ref={videoRef}
         src={video.public_url}
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-contain"
         playsInline
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
