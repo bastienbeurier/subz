@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   // Fetch voter and target to ensure both are connected in the room
   const { data: players } = await supabase
     .from("players")
-    .select("id, pseudo, is_connected")
+    .select("id, pseudo, is_connected, device_token")
     .eq("room_id", roomId)
     .eq("is_connected", true);
 
@@ -99,6 +99,14 @@ export async function POST(req: NextRequest) {
   });
 
   if (votes >= needed) {
+    // Ban the device so they can't rejoin with a different name
+    if (target.device_token) {
+      await supabase.from("room_bans").insert({
+        room_id: roomId,
+        device_token: target.device_token,
+      });
+    }
+
     // Kick the player: delete their record (cascades clean up their data)
     await supabase.from("players").delete().eq("id", targetId);
 

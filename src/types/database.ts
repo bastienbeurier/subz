@@ -106,6 +106,7 @@ export type Database = {
           is_connected: boolean;
           last_seen_at: string;
           joined_round: number;
+          device_token: string | null;
         };
         Insert: {
           id?: string;
@@ -119,6 +120,7 @@ export type Database = {
           is_connected?: boolean;
           last_seen_at?: string;
           joined_round?: number;
+          device_token?: string | null;
         };
         Update: {
           id?: string;
@@ -132,6 +134,28 @@ export type Database = {
           is_connected?: boolean;
           last_seen_at?: string;
           joined_round?: number;
+          device_token?: string | null;
+        };
+        Relationships: [];
+      };
+      room_bans: {
+        Row: {
+          id: string;
+          created_at: string;
+          room_id: string;
+          device_token: string;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          room_id: string;
+          device_token: string;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          room_id?: string;
+          device_token?: string;
         };
         Relationships: [];
       };

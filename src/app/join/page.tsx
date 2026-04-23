@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { savePlayerSession } from "@/hooks/usePlayerSession";
+import { getDeviceToken } from "@/hooks/useDeviceToken";
 import { useGameStore } from "@/store/gameStore";
 import type { Room, Player } from "@/types/game";
 
@@ -54,7 +55,7 @@ function JoinForm() {
       body = { pseudo: values.pseudo };
     } else {
       url = "/api/rooms/join";
-      body = { pseudo: values.pseudo, code: values.code ?? prefillCode };
+      body = { pseudo: values.pseudo, code: values.code ?? prefillCode, deviceToken: getDeviceToken() };
     }
 
     const res = await fetch(url, {

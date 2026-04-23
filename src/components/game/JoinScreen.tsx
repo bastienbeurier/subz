@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { savePlayerSession } from "@/hooks/usePlayerSession";
+import { getDeviceToken } from "@/hooks/useDeviceToken";
 
 const schema = z.object({
   pseudo: z
@@ -38,7 +39,7 @@ export default function JoinScreen({ roomCode }: JoinScreenProps) {
     const res = await fetch("/api/rooms/join", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pseudo: values.pseudo, code: roomCode }),
+      body: JSON.stringify({ pseudo: values.pseudo, code: roomCode, deviceToken: getDeviceToken() }),
     });
 
     const data = await res.json();

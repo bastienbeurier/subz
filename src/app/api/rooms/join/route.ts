@@ -10,6 +10,7 @@ const schema = z.object({
     .max(16)
     .regex(/^[a-zA-Z0-9 _-]+$/),
   code: z.string().length(6),
+  deviceToken: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const { pseudo, code } = parsed.data;
+  const { pseudo, code, deviceToken } = parsed.data;
   const supabase = createServiceClient();
 
   // Find the room
@@ -32,6 +33,20 @@ export async function POST(req: NextRequest) {
 
   if (roomError || !room) {
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
+  }
+
+  // Check if this device is banned from the room
+  if (deviceToken) {
+    const { data: ban } = await supabase
+      .from("room_bans")
+      .select("id")
+      .eq("room_id", room.id)
+      .eq("device_token", deviceToken)
+      .maybeSingle();
+
+    if (ban) {
+      return NextResponse.json({ error: "You have been banned from this room" }, { status: 403 });
+    }
   }
 
   // Count connected players
@@ -82,6 +97,7 @@ export async function POST(req: NextRequest) {
         color,
         avatar_index: avatarIndex,
         joined_round: joinedRound,
+        ...(deviceToken ? { device_token: deviceToken } : {}),
       })
       .select()
       .single();
