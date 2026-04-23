@@ -46,25 +46,28 @@ export default function RoomPage() {
       });
   }, [room?.id, setVoteKicks]);
 
-  // Load video when current_video_id changes
+  // Load video + language-filtered subtitles when video or room language changes
   useEffect(() => {
     if (!room?.current_video_id) {
       setVideo(null);
       return;
     }
     const supabase = createClient();
-    supabase
-      .from("videos")
-      .select("*, video_subtitles(*)")
-      .eq("id", room.current_video_id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          const { video_subtitles, ...rest } = data as Record<string, unknown> & { video_subtitles: Video["subtitles"] };
-          setVideo({ ...(rest as object), subtitles: video_subtitles ?? [] } as Video);
-        }
-      });
-  }, [room?.current_video_id]);
+    const lang = room.language ?? "en";
+    Promise.all([
+      supabase.from("videos").select("*").eq("id", room.current_video_id).single(),
+      supabase
+        .from("video_subtitles")
+        .select("*")
+        .eq("video_id", room.current_video_id)
+        .eq("language", lang)
+        .order("start_ms", { ascending: true }),
+    ]).then(([{ data: videoData }, { data: subtitles }]) => {
+      if (videoData) {
+        setVideo({ ...(videoData as object), subtitles: subtitles ?? [] } as Video);
+      }
+    });
+  }, [room?.current_video_id, room?.language]);
 
   // No player identity → show inline join screen
   if (!myPlayerId) {

@@ -58,6 +58,7 @@ export type Database = {
           auto_advance_at: string | null;
           last_activity_at: string;
           is_deleted: boolean;
+          language: string;
         };
         Insert: {
           id?: string;
@@ -74,6 +75,7 @@ export type Database = {
           auto_advance_at?: string | null;
           last_activity_at?: string;
           is_deleted?: boolean;
+          language?: string;
         };
         Update: {
           id?: string;
@@ -90,6 +92,7 @@ export type Database = {
           auto_advance_at?: string | null;
           last_activity_at?: string;
           is_deleted?: boolean;
+          language?: string;
         };
         Relationships: [];
       };
@@ -227,6 +230,7 @@ export type Database = {
           start_ms: number;
           end_ms: number;
           text: string;
+          language: string;
         };
         Insert: {
           id?: string;
@@ -235,6 +239,7 @@ export type Database = {
           start_ms: number;
           end_ms: number;
           text: string;
+          language?: string;
         };
         Update: {
           id?: string;
@@ -243,6 +248,7 @@ export type Database = {
           start_ms?: number;
           end_ms?: number;
           text?: string;
+          language?: string;
         };
         Relationships: [];
       };

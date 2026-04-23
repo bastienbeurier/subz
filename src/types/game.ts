@@ -7,6 +7,8 @@ export type GamePhase =
   | "round_results"
   | "final";
 
+export type GameLanguage = "en" | "fr";
+
 export interface Room {
   id: string;
   code: string;
@@ -21,6 +23,7 @@ export interface Room {
   auto_advance_at: string | null;
   last_activity_at: string;
   is_deleted: boolean;
+  language: GameLanguage;
   created_at: string;
 }
 
@@ -44,6 +47,7 @@ export interface VideoSubtitle {
   start_ms: number;
   end_ms: number;
   text: string;
+  language: string;
   created_at: string;
 }
 

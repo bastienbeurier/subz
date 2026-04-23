@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { useGameStore, selectConnectedPlayers, selectMyPlayer } from "@/store/gameStore";
 import { useShallow } from "zustand/react/shallow";
+import type { GameLanguage } from "@/types/game";
+
+const LANG_LABELS: Record<GameLanguage, string> = {
+  en: "🇬🇧 English",
+  fr: "🇫🇷 Français",
+};
 
 export function LobbyPhase() {
   const room = useGameStore((s) => s.room);
@@ -13,8 +19,10 @@ export function LobbyPhase() {
   const myPlayer = useGameStore(selectMyPlayer);
   const [copying, setCopying] = useState(false);
   const [startLoading, setStartLoading] = useState(false);
+  const [langLoading, setLangLoading] = useState(false);
 
   const isCreator = myPlayer?.id === room?.creator_id;
+  const currentLang: GameLanguage = (room?.language as GameLanguage) ?? "en";
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(window.location.href);
@@ -34,6 +42,18 @@ export function LobbyPhase() {
     } finally {
       setStartLoading(false);
     }
+  };
+
+  const handleToggleLang = async () => {
+    if (!myPlayer || !room || langLoading) return;
+    const next: GameLanguage = currentLang === "en" ? "fr" : "en";
+    setLangLoading(true);
+    await fetch("/api/rooms/language", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomId: room.id, playerId: myPlayer.id, language: next }),
+    });
+    setLangLoading(false);
   };
 
   return (
@@ -58,6 +78,23 @@ export function LobbyPhase() {
       <Button variant="secondary" size="sm" onClick={handleCopy}>
         {copying ? "Copied!" : "Copy invite link"}
       </Button>
+
+      {/* Language selection */}
+      <div className="flex flex-col items-center gap-2">
+        <p className="text-white/40 text-xs uppercase tracking-widest">Language</p>
+        {isCreator ? (
+          <button
+            onClick={handleToggleLang}
+            disabled={langLoading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold transition-colors disabled:opacity-50"
+          >
+            {LANG_LABELS[currentLang]}
+            <span className="text-white/30 text-xs">tap to switch</span>
+          </button>
+        ) : (
+          <p className="text-white font-semibold text-sm">{LANG_LABELS[currentLang]}</p>
+        )}
+      </div>
 
       {/* Player list */}
       <div className="w-full max-w-sm space-y-2">
