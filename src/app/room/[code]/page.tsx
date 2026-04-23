@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useGameStore } from "@/store/gameStore";
-import { usePlayerSession } from "@/hooks/usePlayerSession";
 import { PhaseTransition } from "@/components/layout/PhaseTransition";
 import { LobbyPhase } from "@/components/game/LobbyPhase";
 import { PromptPhase } from "@/components/game/PromptPhase";
@@ -20,7 +19,6 @@ import type { Video } from "@/types/game";
 export default function RoomPage() {
   const params = useParams();
   const code = (params.code as string).toUpperCase();
-  const session = usePlayerSession();
   const room = useGameStore((s) => s.room);
   const myPlayerId = useGameStore((s) => s.myPlayerId);
   const setSubmitted = useGameStore((s) => s.setSubmitted);
@@ -53,8 +51,8 @@ export default function RoomPage() {
       });
   }, [room?.current_video_id]);
 
-  // No session → show inline join screen (no PhaseTransition, standalone screen)
-  if (!session || !myPlayerId) {
+  // No player identity → show inline join screen
+  if (!myPlayerId) {
     return <JoinScreen roomCode={code} />;
   }
 

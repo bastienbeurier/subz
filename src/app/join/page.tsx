@@ -8,6 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { savePlayerSession } from "@/hooks/usePlayerSession";
+import { useGameStore } from "@/store/gameStore";
+import type { Room, Player } from "@/types/game";
 
 const schema = z.object({
   pseudo: z
@@ -27,6 +29,7 @@ function JoinForm() {
   const prefillCode = searchParams.get("code") ?? "";
 
   const [serverError, setServerError] = useState<string | null>(null);
+  const { setRoom, setMyPlayer, setPlayers } = useGameStore();
 
   const {
     register,
@@ -68,6 +71,9 @@ function JoinForm() {
     }
 
     savePlayerSession(data.player.id, data.player.pseudo, data.room.code);
+    setRoom(data.room as Room);
+    setMyPlayer(data.player.id, data.player.pseudo);
+    setPlayers([data.player as Player]);
     router.push(`/room/${data.room.code}`);
   };
 
