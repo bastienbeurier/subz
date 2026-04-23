@@ -16,77 +16,60 @@ interface VideoPlayerProps {
 }
 
 /**
- * Injects subtitles as native browser text-track cues so they are tied
- * directly to the video timeline — no React state, no onTimeUpdate race.
+ * Injects all subtitles onto a SINGLE native text track so the browser
+ * applies identical positioning to every cue — no React state, no
+ * onTimeUpdate race, no cross-track alignment drift.
  *
- * Two tracks are created per mount:
- *   1. Static context subtitles (video_subtitles rows) – shown at their
- *      configured timecodes, positioned near the bottom of the frame.
- *   2. The player's answer / placeholder – shown from subtitle_start_ms to
- *      the end of the clip, positioned above the static line so both are
- *      readable simultaneously.
+ * Cues added:
+ *  - Static context subtitles (video_subtitles rows) at their timecodes.
+ *  - Player answer / placeholder from subtitle_start_ms to end of clip.
+ *    The placeholder is wrapped in <c.placeholder> so ::cue(c.placeholder)
+ *    can colour it yellow without affecting answer text.
  *
- * Both tracks are set to 'disabled' on cleanup so they don't linger if the
- * video element is reused (though key-based remounts already give a fresh
- * element each time).
+ * The track is disabled on cleanup; key-based remounts give a fresh video
+ * element anyway so accumulation is not a concern.
  */
-function injectSubtitleTracks(
+function injectSubtitleTrack(
   el: HTMLVideoElement,
   staticSubtitles: VideoSubtitle[] | undefined,
   subtitleText: string | null | undefined,
   subtitleStartMs: number,
   durationMs: number
 ): () => void {
-  const tracks: TextTrack[] = [];
+  try {
+    const track = el.addTextTrack("subtitles", "game", "und");
+    track.mode = "showing";
 
-  // Track 1: static context subtitles
-  if (staticSubtitles?.length) {
-    try {
-      const t = el.addTextTrack("subtitles", "context", "und");
-      t.mode = "showing";
-      for (const s of staticSubtitles) {
-        const cue = new VTTCue(s.start_ms / 1000, s.end_ms / 1000, s.text);
-        cue.snapToLines = false;
-        cue.line = 82;
-        cue.position = 50;
-        cue.size = 92;
-        cue.align = "center";
-        t.addCue(cue);
-      }
-      tracks.push(t);
-    } catch {
-      // VTTCue not supported — subtitles simply won't show on this browser
+    const makeCue = (startSec: number, endSec: number, text: string) => {
+      const cue = new VTTCue(startSec, endSec, text);
+      cue.snapToLines = false;
+      cue.line = 82;      // ~18 % from the bottom
+      cue.position = 50;
+      cue.size = 92;      // 92 % width — long lines wrap cleanly
+      cue.align = "center";
+      return cue;
+    };
+
+    // Static context subtitles
+    for (const s of staticSubtitles ?? []) {
+      track.addCue(makeCue(s.start_ms / 1000, s.end_ms / 1000, s.text));
     }
-  }
 
-  // Track 2: player answer / placeholder
-  if (subtitleText !== undefined) {
-    try {
-      // Wrap placeholder in a VTT class tag so ::cue(c.placeholder) can
-      // target it with a distinct colour while leaving answer text white.
+    // Player answer or placeholder
+    if (subtitleText !== undefined) {
       const label = subtitleText === null
         ? "<c.placeholder>INSERT SUBTITLE HERE</c.placeholder>"
         : subtitleText;
       const startSec = subtitleStartMs / 1000;
       const endSec = Math.max(durationMs / 1000, startSec + 0.1);
-      const t = el.addTextTrack("subtitles", "answer", "und");
-      t.mode = "showing";
-      const cue = new VTTCue(startSec, endSec, label);
-      cue.snapToLines = false;
-      cue.line = 88;
-      cue.position = 50;
-      cue.size = 90;
-      cue.align = "center";
-      t.addCue(cue);
-      tracks.push(t);
-    } catch {
-      // ignore
+      track.addCue(makeCue(startSec, endSec, label));
     }
-  }
 
-  return () => {
-    for (const t of tracks) t.mode = "disabled";
-  };
+    return () => { track.mode = "disabled"; };
+  } catch {
+    // VTTCue not supported — fail silently
+    return () => {};
+  }
 }
 
 export function VideoPlayer({
@@ -111,7 +94,7 @@ export function VideoPlayer({
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
-    return injectSubtitleTracks(
+    return injectSubtitleTrack(
       el,
       staticSubtitles,
       subtitleText,
