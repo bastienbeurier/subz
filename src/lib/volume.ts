@@ -15,5 +15,6 @@ export function setVolumeLevel(v: number): void {
   _volume = Math.max(0, Math.min(1, v));
   if (typeof window !== "undefined") {
     localStorage.setItem(STORAGE_KEY, String(_volume));
+    window.dispatchEvent(new CustomEvent("gamevolume", { detail: _volume }));
   }
 }

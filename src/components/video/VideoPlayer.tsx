@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Video, VideoSubtitle } from "@/types/game";
+import { getVolume } from "@/lib/volume";
 
 interface VideoPlayerProps {
   video: Video;
@@ -72,6 +73,15 @@ export function VideoPlayer({
   const playsRef = useRef(0);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    el.volume = getVolume();
+    const handler = (e: Event) => { el.volume = (e as CustomEvent<number>).detail; };
+    window.addEventListener("gamevolume", handler);
+    return () => window.removeEventListener("gamevolume", handler);
+  }, []);
 
   // Inject native subtitle tracks once the video element is ready.
   // Runs again if the video changes; component remounts (via key) also
