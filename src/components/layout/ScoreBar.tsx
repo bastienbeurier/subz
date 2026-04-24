@@ -8,6 +8,7 @@ import { useShallow } from "zustand/react/shallow";
 import { TOTAL_ROUNDS } from "@/types/game";
 import { cn } from "@/lib/utils/cn";
 import type { Player } from "@/types/game";
+import { getVolume, setVolumeLevel } from "@/lib/volume";
 
 export function ScoreBar() {
   const room = useGameStore((s) => s.room);
@@ -20,6 +21,7 @@ export function ScoreBar() {
 
   const [modalTarget, setModalTarget] = useState<Player | null>(null);
   const [kicking, setKicking] = useState(false);
+  const [volume, setVol] = useState(() => getVolume());
 
   const sorted = [...players].sort((a, b) => b.score - a.score);
   const showSubmitStatus = room?.phase === "answering";
@@ -45,7 +47,7 @@ export function ScoreBar() {
           <Link href="/" className="shrink-0 mr-2 text-white/40 hover:text-white/80 transition-colors text-lg leading-none" title="Leave game">
             ←
           </Link>
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1">
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1 min-w-0">
             {room && room.current_round > 0 && (
               <span className="shrink-0 text-xs font-bold text-white/40 mr-2">
                 {room.current_round}/{TOTAL_ROUNDS}
@@ -84,6 +86,23 @@ export function ScoreBar() {
                 />
               );
             })}
+          </div>
+          <div className="shrink-0 flex items-center gap-1.5 ml-2">
+            <span className="text-white/40 text-xs select-none">{volume === 0 ? "🔇" : "🔊"}</span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={volume}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                setVolumeLevel(v);
+                setVol(v);
+              }}
+              className="w-16 accent-purple-500 cursor-pointer"
+              title="Volume"
+            />
           </div>
         </div>
       </div>

@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getVolume } from "@/lib/volume";
 
 function playTick(isGo: boolean) {
+  const vol = getVolume();
+  if (vol === 0) return;
   try {
     const ctx = new AudioContext();
     const osc = ctx.createOscillator();
@@ -11,7 +14,7 @@ function playTick(isGo: boolean) {
     gain.connect(ctx.destination);
     osc.type = "sine";
     osc.frequency.value = isGo ? 880 : 660;
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.setValueAtTime(0.15 * vol, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (isGo ? 0.25 : 0.12));
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + (isGo ? 0.25 : 0.12));

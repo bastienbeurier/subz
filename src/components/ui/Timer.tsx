@@ -3,8 +3,11 @@
 import { useEffect, useRef } from "react";
 import { useTimer } from "@/hooks/useTimer";
 import { cn } from "@/lib/utils/cn";
+import { getVolume } from "@/lib/volume";
 
 function playTickSound() {
+  const vol = getVolume();
+  if (vol === 0) return;
   try {
     const ctx = new AudioContext();
     const osc = ctx.createOscillator();
@@ -13,7 +16,7 @@ function playTickSound() {
     gain.connect(ctx.destination);
     osc.type = "square";
     osc.frequency.value = 1200;
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.setValueAtTime(0.08 * vol, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.06);
