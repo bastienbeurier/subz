@@ -1,7 +1,27 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useTimer } from "@/hooks/useTimer";
 import { cn } from "@/lib/utils/cn";
+
+function playTickSound() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "square";
+    osc.frequency.value = 1200;
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.06);
+    osc.onended = () => ctx.close();
+  } catch {
+    // AudioContext not available
+  }
+}
 
 interface TimerProps {
   deadline: string | null;
@@ -12,12 +32,22 @@ interface TimerProps {
 
 export function Timer({ deadline, totalMs, onExpire, className }: TimerProps) {
   const remainingMs = useTimer({ deadline, onExpire });
+  const lastTickRef = useRef<number | null>(null);
+
+  const seconds = remainingMs !== null ? Math.ceil(remainingMs / 1000) : null;
+  const isUrgent = seconds !== null && seconds <= 10 && seconds > 0;
+
+  useEffect(() => {
+    if (!isUrgent || seconds === null) return;
+    if (lastTickRef.current !== seconds) {
+      lastTickRef.current = seconds;
+      playTickSound();
+    }
+  }, [seconds, isUrgent]);
 
   if (remainingMs === null) return null;
 
   const pct = Math.max(0, Math.min(1, remainingMs / totalMs));
-  const seconds = Math.ceil(remainingMs / 1000);
-  const isUrgent = seconds <= 10;
 
   // SVG ring
   const radius = 20;
