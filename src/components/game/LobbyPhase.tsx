@@ -72,6 +72,9 @@ export function LobbyPhase() {
         <h1 className="text-5xl font-black tracking-widest text-white">
           {room?.code}
         </h1>
+        <p className="text-white/40 text-sm mt-2">
+          Write the missing subtitle. Make them laugh.
+        </p>
       </div>
 
       {/* Share link */}
