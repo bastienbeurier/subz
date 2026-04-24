@@ -27,13 +27,11 @@ function BrowseContent() {
 
   const { setRoom, setMyPlayer, setPlayers } = useGameStore();
   const [rooms, setRooms] = useState<RoomEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [joiningCode, setJoiningCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchRooms = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
       const res = await fetch("/api/rooms/list");
       const data = await res.json();
@@ -45,7 +43,7 @@ function BrowseContent() {
     } catch {
       setError("Failed to load rooms");
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   }, []);
 
@@ -104,7 +102,7 @@ function BrowseContent() {
           <p className="text-sm text-red-400 text-center mb-4">{error}</p>
         )}
 
-        {loading ? (
+        {initialLoading ? (
           <div className="flex justify-center py-12">
             <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
