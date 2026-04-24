@@ -73,6 +73,19 @@ export default function RoomLayout({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.playerId, code]);
 
+  // Re-fetch players when phase returns to lobby to ensure scores are in sync
+  useEffect(() => {
+    if (room?.phase !== "lobby" || !room?.id) return;
+    const supabase = createClient();
+    supabase
+      .from("players")
+      .select()
+      .eq("room_id", room.id)
+      .then(({ data }) => {
+        if (data) setPlayers(data as Player[]);
+      });
+  }, [room?.phase, room?.id, setPlayers]);
+
   // Subscribe to Realtime once we have the room id
   useRoomRealtime(room?.id ?? null);
 

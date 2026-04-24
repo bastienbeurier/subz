@@ -42,6 +42,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Need at least 2 players to start" }, { status: 409 });
   }
 
+  // Reset scores for all connected players before starting a new game
+  await supabase
+    .from("players")
+    .update({ score: 0, joined_round: 0 })
+    .eq("room_id", roomId)
+    .eq("is_connected", true);
+
   const { data: videos } = await supabase
     .from("videos")
     .select("id")
