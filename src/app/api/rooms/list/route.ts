@@ -17,13 +17,15 @@ export async function GET() {
     return NextResponse.json({ error: "Failed to fetch rooms" }, { status: 500 });
   }
 
+  const staleThreshold = new Date(Date.now() - 15_000).toISOString();
+
   const results = await Promise.all(
     rooms.map(async (room) => {
       const { count } = await supabase
         .from("players")
         .select("*", { count: "exact", head: true })
         .eq("room_id", room.id)
-        .eq("is_connected", true);
+        .gte("last_seen_at", staleThreshold);
 
       return {
         code: room.code,
