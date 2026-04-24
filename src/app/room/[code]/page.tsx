@@ -69,9 +69,12 @@ export default function RoomPage() {
     });
   }, [room?.current_video_id, room?.language]);
 
-  // No player identity → show inline join screen
+  // No player identity → only show JoinScreen if localStorage confirms no session.
+  // If a session exists, the store is still loading — show spinner instead.
   if (!myPlayerId) {
-    return <JoinScreen roomCode={code} />;
+    const stored = typeof window !== "undefined" ? localStorage.getItem("subz_player") : null;
+    const hasSession = stored ? JSON.parse(stored)?.roomCode?.toUpperCase() === code : false;
+    if (!hasSession) return <JoinScreen roomCode={code} />;
   }
 
   // Room not yet loaded
