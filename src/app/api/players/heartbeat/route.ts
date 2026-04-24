@@ -74,8 +74,7 @@ export async function POST(req: NextRequest) {
         .eq("id", room.creator_id)
         .maybeSingle();
 
-      isCreatorStale =
-        !creator || new Date(creator.last_seen_at) < new Date(Date.now() - 30_000);
+      isCreatorStale = !creator || new Date(creator.last_seen_at) < new Date(staleThreshold);
     }
 
     if (isCreatorStale) {
