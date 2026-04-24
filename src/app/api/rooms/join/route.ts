@@ -49,6 +49,15 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Remove players who have been disconnected — their slots are free for newcomers.
+  // The heartbeat marks players as disconnected after ~10 s of inactivity, so any
+  // is_connected=false row belongs to someone who has genuinely left.
+  await supabase
+    .from("players")
+    .delete()
+    .eq("room_id", room.id)
+    .eq("is_connected", false);
+
   // Count connected players
   const { count } = await supabase
     .from("players")
@@ -70,7 +79,8 @@ export async function POST(req: NextRequest) {
     const { data: existingPlayers } = await supabase
       .from("players")
       .select("avatar_index")
-      .eq("room_id", room.id);
+      .eq("room_id", room.id)
+      .eq("is_connected", true);
 
     if ((existingPlayers?.length ?? 0) >= MAX_PLAYERS) {
       return NextResponse.json({ error: "Room is full" }, { status: 409 });
