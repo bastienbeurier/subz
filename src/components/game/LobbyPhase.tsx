@@ -64,15 +64,12 @@ export function LobbyPhase() {
         </Link>
       </div>
 
-      {/* Room code */}
-      <div className="text-center">
-        <p className="text-white/40 text-xs uppercase tracking-widest mb-1">
-          Room code
-        </p>
-        <h1 className="text-5xl font-black tracking-widest text-white">
-          {room?.code}
+      {/* Title */}
+      <div className="text-center space-y-2">
+        <h1 className="text-6xl font-black tracking-tight text-white">
+          SUBZ
         </h1>
-        <p className="text-white/40 text-sm mt-2">
+        <p className="text-white/50 text-lg">
           Write the missing subtitle. Make them laugh.
         </p>
       </div>
