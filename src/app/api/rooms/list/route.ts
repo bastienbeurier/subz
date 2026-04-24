@@ -18,6 +18,18 @@ export async function GET() {
   }
 
   const staleThreshold = new Date(Date.now() - 15_000).toISOString();
+  const roomIds = rooms.map((r) => r.id);
+
+  // Flush stale players in candidate rooms so is_connected is accurate,
+  // even for rooms where everyone left and no heartbeat is running anymore.
+  if (roomIds.length > 0) {
+    await supabase
+      .from("players")
+      .update({ is_connected: false })
+      .in("room_id", roomIds)
+      .eq("is_connected", true)
+      .lt("last_seen_at", staleThreshold);
+  }
 
   const results = await Promise.all(
     rooms.map(async (room) => {
@@ -25,7 +37,7 @@ export async function GET() {
         .from("players")
         .select("*", { count: "exact", head: true })
         .eq("room_id", room.id)
-        .gte("last_seen_at", staleThreshold);
+        .eq("is_connected", true);
 
       return {
         code: room.code,
