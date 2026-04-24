@@ -34,9 +34,7 @@ export async function GET() {
     })
   );
 
-  const openRooms = results.filter(
-    (r) => r.playerCount > 0 && r.playerCount < r.maxPlayers
-  );
+  const visibleRooms = results.filter((r) => r.playerCount > 0);
 
-  return NextResponse.json({ rooms: openRooms });
+  return NextResponse.json({ rooms: visibleRooms });
 }

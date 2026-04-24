@@ -55,6 +55,8 @@ function BrowseContent() {
       return;
     }
     fetchRooms();
+    const interval = setInterval(fetchRooms, 3000);
+    return () => clearInterval(interval);
   }, [pseudo, fetchRooms, router]);
 
   const joinRoom = async (code: string) => {
@@ -107,45 +109,42 @@ function BrowseContent() {
             <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
         ) : rooms.length === 0 ? (
-          <div className="text-center py-12 space-y-4">
+          <div className="text-center py-12">
             <p className="text-white/50">No open rooms right now.</p>
-            <Button variant="ghost" size="sm" onClick={fetchRooms}>
-              Refresh
-            </Button>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {rooms.map((room) => (
-              <div
-                key={room.code}
-                className="flex items-center justify-between bg-white/10 rounded-2xl px-4 py-3"
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-white font-bold text-lg tracking-wider">
-                    {room.code}
-                  </span>
-                  <div className="flex items-center gap-2 text-sm text-white/50">
-                    <span>
-                      {room.playerCount}/{room.maxPlayers} players
-                    </span>
-                    <span>·</span>
-                    <span>{LANGUAGE_LABELS[room.language] ?? room.language.toUpperCase()}</span>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  loading={joiningCode === room.code}
-                  disabled={joiningCode !== null}
-                  onClick={() => joinRoom(room.code)}
+            {rooms.map((room) => {
+              const isFull = room.playerCount >= room.maxPlayers;
+              return (
+                <div
+                  key={room.code}
+                  className={`flex items-center justify-between rounded-2xl px-4 py-3 ${isFull ? "bg-white/5" : "bg-white/10"}`}
                 >
-                  Join
-                </Button>
-              </div>
-            ))}
+                  <div className="flex flex-col gap-0.5">
+                    <span className={`font-bold text-lg tracking-wider ${isFull ? "text-white/30" : "text-white"}`}>
+                      {room.code}
+                    </span>
+                    <div className="flex items-center gap-2 text-sm text-white/40">
+                      <span className={isFull ? "text-red-400/60" : ""}>
+                        {room.playerCount}/{room.maxPlayers} players
+                      </span>
+                      <span>·</span>
+                      <span>{LANGUAGE_LABELS[room.language] ?? room.language.toUpperCase()}</span>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    loading={joiningCode === room.code}
+                    disabled={isFull || joiningCode !== null}
+                    onClick={() => joinRoom(room.code)}
+                  >
+                    {isFull ? "Full" : "Join"}
+                  </Button>
+                </div>
+              );
+            })}
 
-            <Button variant="ghost" size="sm" className="mt-2" onClick={fetchRooms}>
-              Refresh
-            </Button>
           </div>
         )}
       </div>
