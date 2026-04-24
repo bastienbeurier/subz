@@ -30,6 +30,15 @@ export default function RoomLayout({
     reset,
   } = useGameStore();
 
+  // Clear store when leaving the room (unmount only — not on effect re-runs).
+  // Keeping reset() out of the session/code effect prevents it from firing
+  // during React Strict Mode's double-invocation, which would wipe the store
+  // that join/page.tsx pre-populated right before router.push.
+  useEffect(() => {
+    return () => reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Load initial room snapshot + restore session
   useEffect(() => {
     if (!session) return;
@@ -68,8 +77,6 @@ export default function RoomLayout({
     };
 
     load();
-
-    return () => reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.playerId, code]);
 
