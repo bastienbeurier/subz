@@ -69,7 +69,7 @@ export default function HomePage() {
       <div className="text-center space-y-2">
         <img src="/title.jpg" alt="SUBZ" className="w-52 sm:w-64 mx-auto" />
         <p className="text-lg text-white/50">
-          Write the missing subtitle. Make them laugh.
+          Write the missing subtitle. Be funny.
         </p>
       </div>
 

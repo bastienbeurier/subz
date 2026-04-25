@@ -73,7 +73,7 @@ export function LobbyPhase() {
           {room?.code}
         </h1>
         <p className="text-white/40 text-sm mt-2">
-          Write the missing subtitle. Make them laugh.
+          Write the missing subtitle. Be funny.
         </p>
       </div>
 
