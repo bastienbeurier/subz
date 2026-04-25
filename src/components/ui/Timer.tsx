@@ -31,9 +31,10 @@ interface TimerProps {
   totalMs: number;
   onExpire?: () => void;
   className?: string;
+  tickSound?: boolean;
 }
 
-export function Timer({ deadline, totalMs, onExpire, className }: TimerProps) {
+export function Timer({ deadline, totalMs, onExpire, className, tickSound = false }: TimerProps) {
   const remainingMs = useTimer({ deadline, onExpire });
   const lastTickRef = useRef<number | null>(null);
 
@@ -41,12 +42,12 @@ export function Timer({ deadline, totalMs, onExpire, className }: TimerProps) {
   const isUrgent = seconds !== null && seconds <= 10 && seconds > 0;
 
   useEffect(() => {
-    if (!isUrgent || seconds === null) return;
+    if (!tickSound || !isUrgent || seconds === null) return;
     if (lastTickRef.current !== seconds) {
       lastTickRef.current = seconds;
       playTickSound();
     }
-  }, [seconds, isUrgent]);
+  }, [seconds, isUrgent, tickSound]);
 
   if (remainingMs === null) return null;
 

@@ -96,6 +96,7 @@ export function AnsweringPhase() {
             deadline={room.answering_deadline}
             totalMs={ANSWERING_DURATION_MS}
             onExpire={handleTimerExpire}
+            tickSound
           />
         )}
       </div>
