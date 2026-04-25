@@ -94,6 +94,7 @@ export default function HomePage() {
 
         <Button
           type="submit"
+          variant="brand"
           loading={isSubmitting && actionRef.current === "create"}
           className="w-full"
           onClick={() => { actionRef.current = "create"; }}

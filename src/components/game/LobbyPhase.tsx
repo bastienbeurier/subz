@@ -135,7 +135,7 @@ export function LobbyPhase() {
 
       {isCreator ? (
         <Button
-          variant="primary"
+          variant="brand"
           onClick={handleStart}
           loading={startLoading}
           disabled={players.length < 2}
