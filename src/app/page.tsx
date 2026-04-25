@@ -92,23 +92,24 @@ export default function HomePage() {
           <p className="text-sm text-red-400 text-center">{serverError}</p>
         )}
 
-        <button
+        <Button
           type="submit"
-          disabled={isSubmitting}
+          loading={isSubmitting && actionRef.current === "create"}
           className="w-full"
           onClick={() => { actionRef.current = "create"; }}
         >
-          <img src="/create-game.jpg" alt="Create Game" className="w-full rounded-2xl" />
-        </button>
+          Create Game
+        </Button>
 
-        <button
+        <Button
           type="submit"
-          disabled={isSubmitting}
+          variant="secondary"
+          loading={isSubmitting && actionRef.current === "join"}
           className="w-full"
           onClick={() => { actionRef.current = "join"; }}
         >
-          <img src="/join-game.jpg" alt="Join Game" className="w-full rounded-2xl" />
-        </button>
+          Join Game
+        </Button>
       </form>
     </main>
   );
