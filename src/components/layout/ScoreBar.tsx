@@ -205,9 +205,7 @@ function PlayerChip({
       >
         {player.pseudo}
       </span>
-      {alreadyVotedKick ? (
-        <span className="text-red-400 text-xs">✕</span>
-      ) : showCheck ? (
+      {showCheck ? (
         <span className="text-green-400 text-xs">✓</span>
       ) : (
         <span className="text-xs font-bold text-white/50 tabular-nums">
