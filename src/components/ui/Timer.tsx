@@ -38,7 +38,8 @@ export function Timer({ deadline, totalMs, onExpire, className, tickSound = fals
   const remainingMs = useTimer({ deadline, onExpire });
   const lastTickRef = useRef<number | null>(null);
 
-  const seconds = remainingMs !== null ? Math.ceil(remainingMs / 1000) : null;
+  const clampedMs = remainingMs !== null ? Math.min(remainingMs, totalMs) : null;
+  const seconds = clampedMs !== null ? Math.ceil(clampedMs / 1000) : null;
   const isUrgent = seconds !== null && seconds <= 10 && seconds > 0;
 
   useEffect(() => {
@@ -49,9 +50,9 @@ export function Timer({ deadline, totalMs, onExpire, className, tickSound = fals
     }
   }, [seconds, isUrgent, tickSound]);
 
-  if (remainingMs === null) return null;
+  if (clampedMs === null) return null;
 
-  const pct = Math.max(0, Math.min(1, remainingMs / totalMs));
+  const pct = Math.max(0, Math.min(1, clampedMs! / totalMs));
 
   // SVG ring
   const radius = 20;
