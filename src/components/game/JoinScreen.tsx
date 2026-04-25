@@ -89,7 +89,7 @@ export default function JoinScreen({ roomCode }: JoinScreenProps) {
           <p className="text-sm text-red-400 text-center">{serverError}</p>
         )}
 
-        <Button type="submit" loading={isSubmitting || joined} className="w-full mt-2">
+        <Button type="submit" variant="brand" loading={isSubmitting || joined} className="w-full mt-2">
           Join game
         </Button>
       </form>
