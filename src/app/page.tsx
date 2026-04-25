@@ -67,16 +67,7 @@ export default function HomePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 px-6 py-12 bg-[var(--background)]">
       <div className="text-center space-y-2">
-        <h1
-          className="text-8xl font-black tracking-wide"
-          style={{
-            color: "#FF3333",
-            textShadow:
-              "3px 3px 0 #7A0000, 6px 6px 0 #7A0000, 9px 9px 0 #5C0000",
-          }}
-        >
-          SUBZ
-        </h1>
+        <img src="/title.jpg" alt="SUBZ" className="w-72 sm:w-96" />
         <p className="text-lg text-white/50">
           Write the missing subtitle. Make them laugh.
         </p>
