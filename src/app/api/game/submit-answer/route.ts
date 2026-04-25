@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
-import { ANSWERING_DURATION_MS } from "@/types/game";
+import { ANSWERING_DURATION_MS, CLOCK_SKEW_BUFFER_MS } from "@/types/game";
 
 const schema = z.object({
   roomId: z.string().uuid(),
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
   // Start the countdown on the first submission. Use IS NULL as the WHERE
   // condition so concurrent submissions only write the deadline once.
   if (!room.answering_deadline) {
-    const deadline = new Date(Date.now() + ANSWERING_DURATION_MS).toISOString();
+    const deadline = new Date(Date.now() + ANSWERING_DURATION_MS + CLOCK_SKEW_BUFFER_MS).toISOString();
     await supabase
       .from("rooms")
       .update({ answering_deadline: deadline })

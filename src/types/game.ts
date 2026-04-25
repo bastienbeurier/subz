@@ -132,3 +132,7 @@ export const ROUND_RESULTS_DURATION_MS = 10_000;
 export const FINAL_DURATION_MS = 20_000;
 export const PROMPT_BUFFER_MS = 5_000;
 export const DIFFUSION_STEP_BUFFER_MS = 3_000;
+// Extra time added server-side to every deadline to absorb clock skew between clients.
+// The displayed timer is clamped to the nominal duration so players see 60s/10s,
+// but onExpire fires ~2s after the display hits 0, giving lagging clients time to reach 0.
+export const CLOCK_SKEW_BUFFER_MS = 2_000;

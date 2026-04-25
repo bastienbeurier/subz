@@ -10,6 +10,7 @@ import {
   FINAL_DURATION_MS,
   PROMPT_BUFFER_MS,
   DIFFUSION_STEP_BUFFER_MS,
+  CLOCK_SKEW_BUFFER_MS,
 } from "@/types/game";
 import type { Answer } from "@/types/game";
 
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
         .eq("round", room.current_round);
 
       if (!answers || answers.length === 0) {
-        const autoAdvanceAt = new Date(now.getTime() + ROUND_RESULTS_DURATION_MS).toISOString();
+        const autoAdvanceAt = new Date(now.getTime() + ROUND_RESULTS_DURATION_MS + CLOCK_SKEW_BUFFER_MS).toISOString();
         const { error } = await supabase
           .from("rooms")
           .update({ phase: "round_results", auto_advance_at: autoAdvanceAt })
@@ -115,7 +116,7 @@ export async function POST(req: NextRequest) {
 
     case "diffusion": {
       // diffusion → voting
-      const votingDeadline = new Date(now.getTime() + VOTING_DURATION_MS).toISOString();
+      const votingDeadline = new Date(now.getTime() + VOTING_DURATION_MS + CLOCK_SKEW_BUFFER_MS).toISOString();
       const { error } = await supabase
         .from("rooms")
         .update({ phase: "voting", voting_deadline: votingDeadline })
@@ -155,7 +156,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const autoAdvanceAt = new Date(now.getTime() + ROUND_RESULTS_DURATION_MS).toISOString();
+      const autoAdvanceAt = new Date(now.getTime() + ROUND_RESULTS_DURATION_MS + CLOCK_SKEW_BUFFER_MS).toISOString();
       const { error } = await supabase
         .from("rooms")
         .update({ phase: "round_results", auto_advance_at: autoAdvanceAt })
@@ -170,7 +171,7 @@ export async function POST(req: NextRequest) {
 
       if (isLastRound) {
         // → final
-        const autoAdvanceAt = new Date(now.getTime() + FINAL_DURATION_MS).toISOString();
+        const autoAdvanceAt = new Date(now.getTime() + FINAL_DURATION_MS + CLOCK_SKEW_BUFFER_MS).toISOString();
         const { error } = await supabase
           .from("rooms")
           .update({ phase: "final", auto_advance_at: autoAdvanceAt })
