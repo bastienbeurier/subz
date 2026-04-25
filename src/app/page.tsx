@@ -95,19 +95,19 @@ export default function HomePage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full"
+          className="w-[70%] mx-auto block cursor-pointer"
           onClick={() => { actionRef.current = "create"; }}
         >
-          <img src="/create-game.jpg" alt="Create Game" className="w-full rounded-2xl" />
+          <img src="/create-game.jpg" alt="Create Game" className="w-full rounded-2xl pointer-events-none" />
         </button>
 
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full"
+          className="w-[70%] mx-auto block cursor-pointer"
           onClick={() => { actionRef.current = "join"; }}
         >
-          <img src="/join-game.jpg" alt="Join Game" className="w-full rounded-2xl" />
+          <img src="/join-game.jpg" alt="Join Game" className="w-full rounded-2xl pointer-events-none" />
         </button>
       </form>
     </main>
