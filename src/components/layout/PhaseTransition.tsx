@@ -16,7 +16,7 @@ export function PhaseTransition({ phaseKey, children }: PhaseTransitionProps) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -16 }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
-        className="flex-1 flex flex-col"
+        className="flex-1 flex flex-col min-h-0"
       >
         {children}
       </motion.div>
