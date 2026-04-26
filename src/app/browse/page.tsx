@@ -11,6 +11,7 @@ import type { Room, Player } from "@/types/game";
 interface RoomEntry {
   code: string;
   language: string;
+  phase: string;
   playerCount: number;
   maxPlayers: number;
 }
@@ -114,15 +115,23 @@ function BrowseContent() {
           <div className="flex flex-col gap-3">
             {rooms.map((room) => {
               const isFull = room.playerCount >= room.maxPlayers;
+              const inGame = room.phase !== "lobby";
               return (
                 <div
                   key={room.code}
                   className={`flex items-center justify-between rounded-2xl px-4 py-3 ${isFull ? "bg-white/5" : "bg-white/10"}`}
                 >
                   <div className="flex flex-col gap-0.5">
-                    <span className={`font-bold text-lg tracking-wider ${isFull ? "text-white/30" : "text-white"}`}>
-                      {room.code}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-bold text-lg tracking-wider ${isFull ? "text-white/30" : "text-white"}`}>
+                        {room.code}
+                      </span>
+                      {inGame && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#FF3333]/20 text-[#FF3333]">
+                          In game
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 text-sm text-white/40">
                       <span className={isFull ? "text-red-400/60" : ""}>
                         {room.playerCount}/{room.maxPlayers} players

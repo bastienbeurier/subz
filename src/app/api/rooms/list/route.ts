@@ -35,12 +35,12 @@ export async function GET() {
     }
   }
 
-  // Now fetch only the rooms that survived cleanup
+  // Now fetch only the rooms that survived cleanup (all phases)
   const { data: rooms, error } = await supabase
     .from("rooms")
-    .select("id, code, language")
-    .eq("phase", "lobby")
+    .select("id, code, language, phase")
     .eq("is_deleted", false)
+    .not("phase", "eq", "final")
     .order("created_at", { ascending: false });
 
   if (error || !rooms) {
@@ -58,6 +58,7 @@ export async function GET() {
       return {
         code: room.code,
         language: room.language as string,
+        phase: room.phase as string,
         playerCount: count ?? 0,
         maxPlayers: MAX_PLAYERS,
       };
