@@ -100,7 +100,8 @@ export function ScoreBar() {
                 setVolumeLevel(v);
                 setVol(v);
               }}
-              className="w-16 accent-purple-500 cursor-pointer"
+              className="w-16 cursor-pointer"
+              style={{ accentColor: "#FF3333" }}
               title="Volume"
             />
           </div>
