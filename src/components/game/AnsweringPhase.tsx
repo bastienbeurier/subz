@@ -110,10 +110,6 @@ export function AnsweringPhase() {
             maxLength={180}
             className="flex-1 min-h-[120px] p-4 rounded-2xl bg-white/10 text-white text-lg placeholder:text-white/30 border-2 border-transparent focus:border-violet-500 focus:outline-none resize-none"
             autoFocus
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
-            data-form-type="other"
           />
           <div className="flex justify-between items-center">
             <span className="text-white/30 text-sm">{text.length}/180</span>
