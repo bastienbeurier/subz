@@ -61,7 +61,7 @@ export function FinalPhase() {
 
       {/* Countdown to restart */}
       <div className="flex flex-col items-center gap-3 mt-auto">
-        <p className="text-white/40 text-sm">Next game starting in…</p>
+        <p className="text-white/40 text-sm">Back to lobby in…</p>
         {room?.auto_advance_at && (
           <Timer
             deadline={room.auto_advance_at}
