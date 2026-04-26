@@ -69,7 +69,7 @@ export function VideoPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
   const [currentPlay, setCurrentPlay] = useState(1);
-  const [needsTap, setNeedsTap] = useState(false);
+  const [mutedFallback, setMutedFallback] = useState(false);
   const playsRef = useRef(0);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
@@ -101,8 +101,17 @@ export function VideoPlayer({
     if (!el) return;
     el.currentTime = 0;
     setCurrentTimeMs(0);
-    setNeedsTap(false);
-    if (autoPlay) el.play().catch(() => { setNeedsTap(true); });
+    setMutedFallback(false);
+    if (autoPlay) {
+      el.muted = false;
+      el.play().catch(() => {
+        // Autoplay with sound blocked — play muted immediately so video is in sync,
+        // then show non-blocking unmute button.
+        el.muted = true;
+        el.play().catch(() => {});
+        setMutedFallback(true);
+      });
+    }
   }, [video.id, autoPlay]);
 
   const handleTimeUpdate = () => {
@@ -138,19 +147,17 @@ export function VideoPlayer({
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
       />
-      {needsTap && (
+      {mutedFallback && (
         <button
-          className="absolute inset-0 flex items-center justify-center bg-black/40"
+          className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-sm font-semibold px-3 py-1.5 rounded-full"
           onClick={() => {
-            videoRef.current?.play().then(() => setNeedsTap(false)).catch(() => {});
+            const el = videoRef.current;
+            if (!el) return;
+            el.muted = false;
+            setMutedFallback(false);
           }}
         >
-          <div className="flex flex-col items-center gap-2 text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-16 h-16 drop-shadow-lg">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-            <span className="text-sm font-medium drop-shadow">Tap to play</span>
-          </div>
+          🔇 <span>Tap for sound</span>
         </button>
       )}
       {playCount > 1 && (
