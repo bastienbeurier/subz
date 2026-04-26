@@ -40,7 +40,6 @@ export async function GET() {
     .from("rooms")
     .select("id, code, language, phase")
     .eq("is_deleted", false)
-    .not("phase", "eq", "final")
     .order("created_at", { ascending: false });
 
   if (error || !rooms) {
