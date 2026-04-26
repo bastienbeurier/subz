@@ -87,7 +87,7 @@ export function ScoreBar() {
               );
             })}
           </div>
-          <div className="shrink-0 flex items-center gap-1.5 ml-2">
+          <div className="hidden md:flex shrink-0 items-center gap-1.5 ml-2">
             <span className="text-white/40 text-xs select-none">{volume === 0 ? "🔇" : "🔊"}</span>
             <input
               type="range"
