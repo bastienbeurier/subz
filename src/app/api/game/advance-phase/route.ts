@@ -127,7 +127,23 @@ export async function POST(req: NextRequest) {
     }
 
     case "voting": {
-      // voting → round_results: tally scores (sole canonical scorer).
+      // voting → round_results: transition phase FIRST as an atomic lock.
+      // Only the first concurrent caller succeeds the conditional UPDATE; all
+      // others find 0 rows affected and bail out, preventing double-scoring.
+      const autoAdvanceAt = new Date(now.getTime() + ROUND_RESULTS_DURATION_MS + CLOCK_SKEW_BUFFER_MS).toISOString();
+      const { error, count } = await supabase
+        .from("rooms")
+        .update({ phase: "round_results", auto_advance_at: autoAdvanceAt })
+        .eq("id", roomId)
+        .eq("phase", "voting")
+        .select("id", { count: "exact", head: true });
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      if ((count ?? 0) === 0) {
+        // Another call already transitioned — scores already tallied.
+        return NextResponse.json({ ok: true });
+      }
+
+      // We own the transition — tally scores.
       const { data: answers } = await supabase
         .from("answers")
         .select()
@@ -136,8 +152,6 @@ export async function POST(req: NextRequest) {
 
       if (answers && answers.length > 0) {
         const scores = calculateRoundScores(answers as Answer[]);
-        // Fetch authors' current scores so we can apply the delta atomically
-        // per row. (No SQL RPC here to keep the migration surface small.)
         const playerIds = Array.from(scores.keys());
         const { data: authors } = await supabase
           .from("players")
@@ -155,14 +169,6 @@ export async function POST(req: NextRequest) {
           })
         );
       }
-
-      const autoAdvanceAt = new Date(now.getTime() + ROUND_RESULTS_DURATION_MS + CLOCK_SKEW_BUFFER_MS).toISOString();
-      const { error } = await supabase
-        .from("rooms")
-        .update({ phase: "round_results", auto_advance_at: autoAdvanceAt })
-        .eq("id", roomId)
-        .eq("phase", "voting");
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       break;
     }
 
