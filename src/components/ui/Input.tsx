@@ -23,6 +23,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           id={id}
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          data-form-type="other"
           className={cn(
             "h-14 px-4 rounded-2xl bg-white/10 text-white text-lg font-medium placeholder:text-white/30",
             "border-2 border-transparent focus:border-violet-500 focus:outline-none",
