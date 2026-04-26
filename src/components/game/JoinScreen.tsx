@@ -71,6 +71,7 @@ export default function JoinScreen({ roomCode }: JoinScreenProps) {
 
       <form
         onSubmit={handleSubmit(onSubmit)}
+        autoComplete="off"
         className="flex flex-col gap-4 w-full max-w-xs"
       >
         <Input
@@ -79,7 +80,6 @@ export default function JoinScreen({ roomCode }: JoinScreenProps) {
           label="Your name"
           placeholder="e.g. SpicyTofu"
           autoFocus
-          autoComplete="off"
           autoCapitalize="words"
           maxLength={16}
           error={errors.pseudo?.message}

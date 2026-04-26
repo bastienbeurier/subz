@@ -170,10 +170,9 @@ export function ChatPanel({ roomId }: ChatPanelProps) {
         onKeyDown={handleKeyDown}
         maxLength={200}
         placeholder="Message…"
-        autoComplete="off"
+        autoComplete="nope"
         autoCorrect="off"
         spellCheck={false}
-        data-form-type="other"
         className="flex-1 min-w-0 bg-white/10 text-white text-sm rounded-xl px-3 py-2 outline-none placeholder:text-white/30 focus:bg-white/15 transition-colors"
       />
       <button
