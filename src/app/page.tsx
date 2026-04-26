@@ -95,21 +95,21 @@ export default function HomePage() {
         <Button
           type="submit"
           variant="brand"
-          loading={isSubmitting && actionRef.current === "create"}
+          loading={isSubmitting && actionRef.current === "join"}
           className="w-full"
-          onClick={() => { actionRef.current = "create"; }}
+          onClick={() => { actionRef.current = "join"; }}
         >
-          Create Game
+          Play!
         </Button>
 
         <Button
           type="submit"
           variant="secondary"
-          loading={isSubmitting && actionRef.current === "join"}
+          loading={isSubmitting && actionRef.current === "create"}
           className="w-full"
-          onClick={() => { actionRef.current = "join"; }}
+          onClick={() => { actionRef.current = "create"; }}
         >
-          Join Game
+          Create Game
         </Button>
       </form>
     </main>
