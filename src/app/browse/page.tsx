@@ -133,6 +133,7 @@ function BrowseContent() {
                   </div>
                   <Button
                     size="sm"
+                    variant={isFull ? "secondary" : "brand"}
                     loading={joiningCode === room.code}
                     disabled={isFull || joiningCode !== null}
                     onClick={() => joinRoom(room.code)}
