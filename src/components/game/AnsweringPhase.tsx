@@ -114,14 +114,17 @@ export function AnsweringPhase() {
             }}
             placeholder="Type your subtitle here…"
             maxLength={180}
-            className="flex-1 min-h-[120px] p-4 rounded-2xl bg-white/10 text-white text-lg placeholder:text-white/30 border-2 border-transparent focus:border-violet-500 focus:outline-none resize-none"
+            className="flex-1 min-h-[120px] p-4 rounded-2xl bg-white/10 text-white text-lg placeholder:text-white/30 border-2 border-transparent focus:outline-none resize-none"
+            style={{ ["--tw-ring-color" as string]: "#FF3333" }}
+            onFocus={e => e.currentTarget.style.borderColor = "#FF3333"}
+            onBlur={e => e.currentTarget.style.borderColor = "transparent"}
             autoFocus
           />
           <div className="flex justify-between items-center">
             <span className="text-white/30 text-sm">{text.length}/180</span>
           </div>
           {error && <p className="text-red-400 text-sm">{error}</p>}
-          <Button type="submit" loading={loading} disabled={!text.trim()} className="w-full">
+          <Button type="submit" variant="brand" loading={loading} disabled={!text.trim()} className="w-full">
             Submit
           </Button>
         </form>

@@ -78,7 +78,7 @@ export function Timer({ deadline, totalMs, onExpire, className, tickSound = fals
           cy="26"
           r={radius}
           fill="none"
-          stroke={isUrgent ? "#f87171" : "#a855f7"}
+          stroke="#FF3333"
           strokeWidth="4"
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
@@ -89,7 +89,7 @@ export function Timer({ deadline, totalMs, onExpire, className, tickSound = fals
       <span
         className={cn(
           "text-2xl font-black tabular-nums",
-          isUrgent ? "text-red-400" : "text-white"
+          "text-white"
         )}
       >
         {seconds}

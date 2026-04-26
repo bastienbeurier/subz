@@ -175,7 +175,7 @@ export function ChatPanel({ roomId }: ChatPanelProps) {
       <button
         onClick={handleSend}
         disabled={!text.trim() || sending}
-        className="px-3 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:pointer-events-none text-white rounded-xl text-sm font-bold transition-colors"
+        className="px-3 py-2 bg-[#FF3333] hover:bg-[#ff1a1a] disabled:opacity-40 disabled:pointer-events-none text-white rounded-xl text-sm font-bold transition-colors"
       >
         ↑
       </button>
