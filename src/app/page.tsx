@@ -75,7 +75,6 @@ export default function HomePage() {
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        autoComplete="off"
         className="flex flex-col gap-4 w-full max-w-xs"
       >
         <Input
@@ -83,6 +82,7 @@ export default function HomePage() {
           id="pseudo"
           placeholder="Enter your name"
           autoFocus
+          autoComplete="off"
           autoCapitalize="words"
           maxLength={16}
           error={errors.pseudo?.message}
