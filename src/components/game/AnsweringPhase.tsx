@@ -106,6 +106,12 @@ export function AnsweringPhase() {
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (text.trim()) handleSubmit(e);
+              }
+            }}
             placeholder="Type your subtitle here…"
             maxLength={180}
             className="flex-1 min-h-[120px] p-4 rounded-2xl bg-white/10 text-white text-lg placeholder:text-white/30 border-2 border-transparent focus:border-violet-500 focus:outline-none resize-none"
