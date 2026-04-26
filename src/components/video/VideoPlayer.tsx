@@ -171,21 +171,8 @@ export function VideoPlayer({
           style={{ top: "82%" }}
         >
           <span
-            style={{
-              display: "inline-block",
-              backgroundColor: "rgba(0,0,0,0.82)",
-              color: subtitleText === null ? "#facc15" : "#fff",
-              fontFamily: "system-ui, -apple-system, sans-serif",
-              fontSize: "1.35rem",
-              fontWeight: 700,
-              lineHeight: 1.3,
-              textShadow: "0 1px 6px rgba(0,0,0,1)",
-              padding: "0.1em 0.4em",
-              textAlign: "center",
-              maxWidth: "92%",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-            }}
+            className="game-subtitle"
+            style={{ color: subtitleText === null ? "#facc15" : "#fff" }}
           >
             {subtitleText === null ? "INSERT SUBTITLE HERE" : subtitleText}
           </span>

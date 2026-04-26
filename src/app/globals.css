@@ -70,6 +70,34 @@ input[type="submit"] {
   text-shadow: 0 1px 6px rgba(0, 0, 0, 1);
 }
 
+@media (max-width: 767px) {
+  ::cue {
+    font-size: 0.675rem;
+  }
+}
+
+/* Player answer / INSERT SUBTITLE HERE overlay */
+.game-subtitle {
+  display: inline-block;
+  background-color: rgba(0, 0, 0, 0.82);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 1);
+  padding: 0.1em 0.4em;
+  text-align: center;
+  max-width: 92%;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 767px) {
+  .game-subtitle {
+    font-size: 0.675rem;
+  }
+}
+
 /* "INSERT SUBTITLE HERE" placeholder — yellow so it's visually distinct */
 ::cue(c.placeholder) {
   color: #facc15; /* Tailwind yellow-400 */
