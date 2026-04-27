@@ -71,19 +71,21 @@ export function ChatPanel({ roomId }: ChatPanelProps) {
     }
   }, [mobileOpen]);
 
-  const handleSend = async () => {
-    const trimmed = text.trim();
+  const sendMessage = async (msg: string, clearInput = false) => {
+    const trimmed = msg.trim();
     if (!trimmed || !myPlayerId || sending) return;
     setSending(true);
-    setText("");
+    if (clearInput) setText("");
     await fetch("/api/game/send-message", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ roomId, playerId: myPlayerId, text: trimmed }),
     });
     setSending(false);
-    inputRef.current?.focus();
+    if (clearInput) inputRef.current?.focus();
   };
+
+  const handleSend = () => sendMessage(text, true);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -160,6 +162,21 @@ export function ChatPanel({ roomId }: ChatPanelProps) {
     </div>
   );
 
+  const emojiBar = (
+    <div className="px-2 pt-2 flex gap-1 justify-around flex-shrink-0">
+      {["😂", "😭", "😮", "🤮", "🤔"].map((emoji) => (
+        <button
+          key={emoji}
+          onClick={() => sendMessage(emoji)}
+          disabled={sending}
+          className="flex-1 py-1.5 text-xl rounded-xl bg-white/5 hover:bg-white/15 active:scale-90 transition-all disabled:opacity-40"
+        >
+          {emoji}
+        </button>
+      ))}
+    </div>
+  );
+
   const inputBar = (
     <div className="px-2 py-2 border-t border-white/10 flex-shrink-0 flex gap-2">
       <input
@@ -226,6 +243,7 @@ export function ChatPanel({ roomId }: ChatPanelProps) {
             </button>
           </div>
           {messagesFeed}
+          {emojiBar}
           {inputBar}
         </div>
       </>
@@ -239,6 +257,7 @@ export function ChatPanel({ roomId }: ChatPanelProps) {
         <p className="text-white/50 text-xs uppercase tracking-widest font-bold">Chat</p>
       </div>
       {messagesFeed}
+      {emojiBar}
       {inputBar}
     </div>
   );
