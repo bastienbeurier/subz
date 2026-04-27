@@ -45,7 +45,7 @@ export function DiffusionPhase({ video }: DiffusionPhaseProps) {
           Subtitle {(room?.diffusion_index ?? 0) + 1} of {answers.length}
         </p>
       </div>
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="flex-1 min-h-0 flex flex-col justify-center overflow-hidden">
         <VideoPlayer
           key={room?.diffusion_index}
           video={video}

@@ -138,7 +138,7 @@ export function VideoPlayer({
   const showPlayerSub = subtitleText !== undefined && currentTimeMs >= video.subtitle_start_ms;
 
   return (
-    <div className="relative w-full bg-black overflow-hidden" style={{ aspectRatio: "16/9" }}>
+    <div className="relative w-full max-h-full bg-black overflow-hidden" style={{ aspectRatio: "16/9" }}>
       <video
         ref={videoRef}
         src={video.public_url}
