@@ -4,6 +4,15 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "SUBZ",
   description: "The missing subtitle party game",
+  icons: {
+    icon: "/logosubz.png",
+    apple: "/logosubz.png",
+  },
+  openGraph: {
+    title: "SUBZ",
+    description: "The missing subtitle party game",
+    images: [{ url: "/logosubz.png" }],
+  },
 };
 
 export const viewport: Viewport = {
