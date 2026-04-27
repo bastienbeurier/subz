@@ -19,6 +19,7 @@ interface RoomEntry {
 const LANGUAGE_LABELS: Record<string, string> = {
   en: "🇬🇧 EN",
   fr: "🇫🇷 FR",
+  es: "🇪🇸 ES",
 };
 
 function BrowseContent() {

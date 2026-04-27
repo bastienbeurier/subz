@@ -7,7 +7,7 @@ export type GamePhase =
   | "round_results"
   | "final";
 
-export type GameLanguage = "en" | "fr";
+export type GameLanguage = "en" | "fr" | "es";
 
 export interface Room {
   id: string;

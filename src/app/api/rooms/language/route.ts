@@ -5,7 +5,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 const schema = z.object({
   roomId: z.string().uuid(),
   playerId: z.string().uuid(),
-  language: z.enum(["en", "fr"]),
+  language: z.enum(["en", "fr", "es"]),
 });
 
 export async function POST(req: NextRequest) {

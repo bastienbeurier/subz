@@ -11,6 +11,7 @@ import type { GameLanguage } from "@/types/game";
 const LANG_LABELS: Record<GameLanguage, string> = {
   en: "🇬🇧 English",
   fr: "🇫🇷 Français",
+  es: "🇪🇸 Español",
 };
 
 export function LobbyPhase() {
@@ -44,14 +45,13 @@ export function LobbyPhase() {
     }
   };
 
-  const handleToggleLang = async () => {
+  const handleChangeLang = async (lang: GameLanguage) => {
     if (!myPlayer || !room || langLoading) return;
-    const next: GameLanguage = currentLang === "en" ? "fr" : "en";
     setLangLoading(true);
     await fetch("/api/rooms/language", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomId: room.id, playerId: myPlayer.id, language: next }),
+      body: JSON.stringify({ roomId: room.id, playerId: myPlayer.id, language: lang }),
     });
     setLangLoading(false);
   };
@@ -86,14 +86,18 @@ export function LobbyPhase() {
       <div className="flex flex-col items-center gap-2">
         <p className="text-white/40 text-xs uppercase tracking-widest">Language</p>
         {isCreator ? (
-          <button
-            onClick={handleToggleLang}
+          <select
+            value={currentLang}
+            onChange={(e) => handleChangeLang(e.target.value as GameLanguage)}
             disabled={langLoading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold transition-colors disabled:opacity-50"
+            className="px-4 py-2 rounded-xl border border-white/15 bg-white/5 text-white text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer appearance-none text-center"
           >
-            {LANG_LABELS[currentLang]}
-            <span className="text-white/30 text-xs">tap to switch</span>
-          </button>
+            {(Object.entries(LANG_LABELS) as [GameLanguage, string][]).map(([code, label]) => (
+              <option key={code} value={code} className="bg-black text-white">
+                {label}
+              </option>
+            ))}
+          </select>
         ) : (
           <p className="text-white font-semibold text-sm">{LANG_LABELS[currentLang]}</p>
         )}
