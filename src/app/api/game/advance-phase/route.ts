@@ -131,14 +131,14 @@ export async function POST(req: NextRequest) {
       // Only the first concurrent caller succeeds the conditional UPDATE; all
       // others find 0 rows affected and bail out, preventing double-scoring.
       const autoAdvanceAt = new Date(now.getTime() + ROUND_RESULTS_DURATION_MS + CLOCK_SKEW_BUFFER_MS).toISOString();
-      const { error, count } = await supabase
+      const { error, data: transitioned } = await supabase
         .from("rooms")
         .update({ phase: "round_results", auto_advance_at: autoAdvanceAt })
         .eq("id", roomId)
         .eq("phase", "voting")
-        .select("id", { count: "exact", head: true });
+        .select("id");
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      if ((count ?? 0) === 0) {
+      if (!transitioned || transitioned.length === 0) {
         // Another call already transitioned — scores already tallied.
         return NextResponse.json({ ok: true });
       }
