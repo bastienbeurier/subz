@@ -25,7 +25,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           id={id}
           className={cn(
             "h-14 px-4 rounded-2xl bg-white/10 text-white text-lg font-medium placeholder:text-white/30",
-            "border-2 border-transparent focus:border-violet-500 focus:outline-none",
+            "border-2 border-transparent focus:outline-none",
             "transition-colors w-full",
             error && "border-red-500",
             className
