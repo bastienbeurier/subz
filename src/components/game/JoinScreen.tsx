@@ -76,8 +76,7 @@ export default function JoinScreen({ roomCode }: JoinScreenProps) {
         <Input
           {...register("pseudo")}
           id="pseudo"
-          label="Your name"
-          placeholder="e.g. SpicyTofu"
+          placeholder="Enter your name"
           autoFocus
           autoComplete="off"
           autoCapitalize="words"
