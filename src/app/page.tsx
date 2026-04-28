@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -30,14 +30,21 @@ export default function HomePage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { pseudo: "" },
   });
 
+  useEffect(() => {
+    const saved = localStorage.getItem("pseudo");
+    if (saved) setValue("pseudo", saved);
+  }, [setValue]);
+
   const onSubmit = async (values: FormValues) => {
     setServerError(null);
+    localStorage.setItem("pseudo", values.pseudo);
 
     if (actionRef.current === "join") {
       router.push(`/browse?pseudo=${encodeURIComponent(values.pseudo)}`);
