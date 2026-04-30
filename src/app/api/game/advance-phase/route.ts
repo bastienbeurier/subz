@@ -257,10 +257,6 @@ export async function POST(req: NextRequest) {
         .update({ score: 0, is_ready: false, joined_round: 0 })
         .eq("room_id", roomId);
 
-      // Delete answers and votes for this room
-      await supabase.from("votes").delete().eq("room_id", roomId);
-      await supabase.from("answers").delete().eq("room_id", roomId);
-
       const { error } = await supabase
         .from("rooms")
         .update({
