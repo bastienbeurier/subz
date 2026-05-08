@@ -42,6 +42,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Need at least 2 players to start" }, { status: 409 });
   }
 
+  // Clean up data from previous games before starting a new one
+  await supabase.from("answers").delete().eq("room_id", roomId);
+  await supabase.from("votes").delete().eq("room_id", roomId);
+  await supabase.from("vote_kicks").delete().eq("room_id", roomId);
+
   // Reset scores for all connected players before starting a new game
   await supabase
     .from("players")
